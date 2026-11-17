@@ -918,6 +918,8 @@ try {
   if (config.mode === "flagsmith") {
     await K.init({ environmentID: config.environmentID, api: config.api, cacheFlags: false, enableAnalytics: false });
     await K.getFlags();
+    const all = K.getAllFlags();
+    for (const name of ["new_checkout", "express_shipping", "promo_banner"]) if (!Object.hasOwn(all, name) || typeof all[name].enabled !== "boolean") throw new Error("Required demo flag missing or invalid in SDK response.");
     flags = Object.fromEntries(["new_checkout", "express_shipping", "promo_banner"].map((n2) => [n2, K.hasFeature(n2)]));
   } else flags = config.flags;
   window.resolvedFlags = flags;
@@ -948,4 +950,4 @@ try {
   $("#mode").textContent = "Flag setup failed";
   $("#setup-error").textContent = error.message;
   window.flagproofReady = false;
-                      }
+}
