@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-17T18:37:43.797Z",
+  "artifactRoot": "/tmp/flagproof-upgrade-ZH1Npa",
+  "seeded": "68a401b5-36bb-461b-80a7-4464a91dbeaf",
+  "healthy": "f0a7826a-5c1f-41e3-bb05-24a19caa20b3",
+  "restartHistory": true,
+  "selectedHistory": true,
+  "markdownDownload": true,
+  "forwardComparison": {
+    "improvements": 2,
+    "regressions": 0
+  },
+  "reverseComparison": {
+    "regressions": 2,
+    "improvements": 0
+  },
+  "subsetEvidence": 3,
+  "mobileWidths": [
+    390,
+    320
+  ],
+  "pageErrors": []
+}
