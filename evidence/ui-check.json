@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-11-17T12:57:21.552Z",
+  "desktop": 1440,
+  "mobileWidths": [
+    390,
+    320
+  ],
+  "horizontalPageOverflow": false,
+  "pageErrors": [],
+  "seededRun": "f5a894db-d051-4666-81d8-2196bc8c3d62",
+  "healthyRun": "99c909f8-46b6-46e5-949d-69ed5dd7d5c4",
+  "reviewedPlan": true,
+  "rejectWithoutRun": true,
+  "additionalDesktop": 1280
+}
