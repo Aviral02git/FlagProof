@@ -57,10 +57,13 @@ async function renderComparison(){
 }
 async function refresh(){try{
  lastState=await api('/api/state');token=lastState.token;$('#mode').textContent=lastState.modeLabel;$('#planner').textContent=`Plan source: ${lastState.planner}`;
+ $('#integration-note').textContent=lastState.mode==='flagsmith'?'Flagsmith management API and browser SDK are selected for an isolated demo environment. Each case must verify both management read-back and SDK-resolved state. Inspect this run before claiming success. The checkout remains synthetic; manual-template planning is not AI.':'Default flag state is local, not Flagsmith. Plans come from a manual template, not an AI model. An isolated Flagsmith configuration must be verified by its measured report. A passing matrix only covers this journey and these eight configurations.';
+ if(lastState.active)selectedId='';
  const run=selectedId?(lastState.recent.find(r=>r.id===selectedId)||await api(`/api/runs/${selectedId}`)):lastState.active||lastState.recent[0];
  if(run)renderRun(run);updateOptions();
  $('#history-warning').textContent=[lastState.recoveryBlock,...lastState.historyWarnings].filter(Boolean).join(' ');
  if(lastState.recoveryBlock)$('#generate').disabled=true;
+ $('#history').disabled=!!lastState.active;
  if(lastState.active){$('#generate').disabled=true;$('#scenario').disabled=true;}
  await renderComparison();
  }catch(error){notice(`Runner unavailable: ${error.message}`,true);}}
