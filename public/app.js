@@ -1,12 +1,12 @@
 const $=s=>document.querySelector(s);
 const names=['new_checkout','express_shipping','promo_banner'];
-let token,plan,currentRun,lastState;
+let token,plan,currentRun,lastState,selectedId='',comparisonKey='',optionsKey='';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(url,data){const response=await fetch(url,{method:data===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Flagproof-Token':token||''},body:data===undefined?undefined:JSON.stringify(data),cache:'no-store'});const result=await response.json();if(!response.ok)throw new Error(result.error||'Request failed');return result;}
 function notice(text,error=false){$('#notice').textContent=text;$('#notice').classList.toggle('error',error);}
 function pill(el,text,status){el.textContent=text;el.className=`pill ${status}`;}
 function renderRun(run){
- currentRun=run;$('#run-meta').textContent=run?`Showing ${run.plan.scenario==='healthy'?'healthy control':'seeded interaction defect'} · run ${run.id.slice(0,8)}. This is the last started suite, not an unrun selection.`:'No suite has run yet.';const results=run?.results?.filter(r=>r.label==='matrix')||[];
+ currentRun=run;$('#run-meta').textContent=run?`Showing ${run.plan.scenario==='healthy'?'healthy control':'seeded interaction defect'} · run ${run.id.slice(0,8)}. This is saved measured evidence, not the unrun fixture selection.`:'No suite has run yet.';const results=run?.results?.filter(r=>r.label==='matrix')||[];
  $('#matrix').innerHTML=Array.from({length:8},(_,i)=>{
   const flags=Object.fromEntries(names.map((n,b)=>[n,Boolean(i&(1<<b))]));
   const result=results.find(r=>names.every(n=>r.flags[n]===flags[n]));
@@ -18,8 +18,8 @@ function renderRun(run){
  $('#cancel').hidden=!running;$('#generate').disabled=!!running;$('#scenario').disabled=!!running;
  if(run)pill($('#run-status'),running?`Running · ${results.filter(r=>['pass','fail','invalid','cancelled'].includes(r.status)).length}/8`:run.status,run.status==='completed'?'pass':run.status==='error'?'fail':'neutral');
  $('#run-error').textContent=run?.error||'';
- $('#cleanup').textContent=run?.cleanup?.status==='verified'?'✓ Original flags restored and read-back verified.':run?.cleanup?.status==='failed'?`Restoration failed: ${run.cleanup.error}`:run?.cleanup?.status==='restoring'?'Restoring original flags…':running?'Original state captured. Cleanup will run before completion.':'Flag restoration is verified after each suite, including cancelled runs.';
- $('#cleanup').classList.toggle('error',run?.cleanup?.status==='failed');
+ $('#cleanup').textContent=run?.cleanup?.status==='verified'?'✓ Original flags restored and read-back verified.':run?.cleanup?.status==='failed'?`Restoration failed: ${run.cleanup.error}`:run?.cleanup?.status==='restoring'?'Restoring original flags…':run?.cleanup?.status==='unknown'?`Restoration unknown: ${run.cleanup.error}`:running?'Original state captured. Cleanup will run before completion.':'Flag restoration is verified after each suite, including cancelled runs.';
+ $('#cleanup').classList.toggle('error',['failed','unknown'].includes(run?.cleanup?.status));
  if(run?.finishedAt&&plan?.status==='approved'&&plan.id===run.planId)notice(`Suite ${run.status}. Review the measured results below.`,run.status==='error');
  const summary=run?.summary;
  $('#finding').hidden=!summary;
@@ -27,16 +27,50 @@ function renderRun(run){
   const minimal=summary.minimal?.[0];const failing=minimal?run.results.find(r=>r.id===minimal.runId):null;const price=failing?.assertions?.find(a=>a.name==='correct-total');
   $('#finding').className=`finding ${summary.failedCases?'finding-fail':'finding-pass'}`;
   $('#finding').innerHTML=`<p class="eyebrow">${summary.validCases}/8 VALID · ${summary.passedCases} PASS · ${summary.failedCases} FAIL${summary.invalidCases?` · ${summary.invalidCases} INVALID`:''}</p><h3>${minimal?'Observed minimal failing set':summary.allPassed?'No failure observed':'Evidence is incomplete'}</h3>${minimal?`<div class="flag-set">${minimal.flags.map(n=>`<code>${esc(n)}</code>`).join('<span>+</span>')}</div>${price?`<p>Price assertion: expected <strong>$${esc(price.expected)}</strong>, observed <strong>$${esc(price.observed)}</strong>.</p>`:''}<p>Each proper subset passed. ${run.reproduction?.confirmed?'A fresh browser run reproduced the failure.':'Reproduction not confirmed.'}</p>`:''}<p>${esc(run.reproduction?.confirmed&&summary.minimal.length?'This is a reproduced observation for this checkout and flag matrix, not a causal proof or a production guarantee.':summary.conclusion)}</p>`;
+  if(summary.minimal?.length){
+ const minimal=summary.minimal[0];const subsetRows=(minimal.passingNeighbours||[]).map(id=>run.results.find(r=>r.id===id)).filter(Boolean);
+ $('#finding').innerHTML+=`<details class="subset-evidence"><summary>Why this is the smallest observed set</summary><p>All proper subsets below passed. Other flags being absent is part of each tested configuration.</p><ul>${subsetRows.map(r=>`<li>${names.filter(n=>r.flags[n]).map(esc).join(' + ')||'All flags OFF'}: <strong>${esc(r.status)}</strong>${r.artifacts?.screenshot?` · <a target="_blank" rel="noopener" href="/artifacts/${run.id}/${esc(r.artifacts.screenshot)}">Inspect screenshot</a>`:''}</li>`).join('')}</ul><p>No claim about untested journeys or causation.</p></details>`;
  }
- $('#downloads').hidden=!run?.finishedAt;
- if(run?.finishedAt)$('#downloads').innerHTML=`<a class="text-link" href="/artifacts/${run.id}/report.json" download>Download measured report JSON ↓</a><span class="small">${esc(run.planSource)} · ${esc(run.mode)}</span>`;
 }
-async function refresh(){try{lastState=await api('/api/state');token=lastState.token;$('#mode').textContent=lastState.modeLabel;$('#planner').textContent=`Plan source: ${lastState.planner}`;const run=lastState.active||lastState.recent[0];if(run)renderRun(run);}catch(error){notice(`Runner unavailable: ${error.message}`,true);}}
+ $('#downloads').hidden=!run?.finishedAt;
+ if(run&&(run.finishedAt||run.status==='interrupted'))$('#downloads').hidden=false;
+ if(run&&(run.finishedAt||run.status==='interrupted'))$('#downloads').innerHTML=`<a class="text-link" href="/artifacts/${run.id}/report.json" download>Download measured report JSON ↓</a><a class="text-link" href="/artifacts/${run.id}/report.md" download>Download readable evidence report ↓</a><span class="small">${esc(run.planSource)} · ${esc(run.mode)}</span>`;
+}
+function updateOptions(){
+ const signature=JSON.stringify([selectedId,currentRun?.id,lastState.recent.map(r=>[r.id,r.status])]);
+ if(signature===optionsKey)return;optionsKey=signature;
+ const option=r=>`<option value="${esc(r.id)}">${esc(r.plan.scenario==='healthy'?'Healthy control':'Seeded defect')} · ${esc(r.status)} · ${esc((r.startedAt||'').replace('T',' ').slice(0,19))} · ${esc(r.id.slice(0,8))}</option>`;
+ const previous=$('#baseline').value;
+ $('#history').innerHTML='<option value="">Latest run (live)</option>'+lastState.recent.map(option).join('');
+ $('#history').value=selectedId;
+ $('#baseline').innerHTML='<option value="">No comparison selected</option>'+lastState.recent.filter(r=>r.id!==currentRun?.id).map(option).join('');
+ $('#baseline').value=previous;
+}
+async function renderComparison(){
+ const baseline=$('#baseline').value;
+ const key=`${currentRun?.id}:${currentRun?.status}:${baseline}:${lastState.recent.length}`;
+ if(key===comparisonKey)return;comparisonKey=key;
+ $('#comparison').hidden=!baseline||!currentRun;if(!baseline||!currentRun)return;
+ const result=await api(`/api/compare?current=${currentRun.id}&baseline=${baseline}`);
+ if(currentRun?.id!==key.split(':')[0])return;
+ $('#comparison').innerHTML=result.comparable?`<p class="eyebrow">MEASURED RUN COMPARISON</p><h3>${result.regressions} regressions · ${result.improvements} improvements</h3><p class="small">${result.unchanged} unchanged. Baseline ${esc(baseline.slice(0,8))} → selected ${esc(currentRun.id.slice(0,8))}. ${esc(result.scope)}</p><div class="matrix-scroll"><table><thead><tr><th>Checkout / Express / Promo</th><th>Baseline</th><th>Selected</th></tr></thead><tbody>${result.rows.map(r=>`<tr><td>${names.map(n=>r.flags[n]?'ON':'OFF').join(' / ')}</td><td>${esc(r.before)}</td><td>${esc(r.after)}</td></tr>`).join('')}</tbody></table></div>`:`<h3>Comparison withheld</h3><p class="small">${esc(result.reason)}</p>`;
+}
+async function refresh(){try{
+ lastState=await api('/api/state');token=lastState.token;$('#mode').textContent=lastState.modeLabel;$('#planner').textContent=`Plan source: ${lastState.planner}`;
+ const run=selectedId?(lastState.recent.find(r=>r.id===selectedId)||await api(`/api/runs/${selectedId}`)):lastState.active||lastState.recent[0];
+ if(run)renderRun(run);updateOptions();
+ $('#history-warning').textContent=[lastState.recoveryBlock,...lastState.historyWarnings].filter(Boolean).join(' ');
+ if(lastState.recoveryBlock)$('#generate').disabled=true;
+ if(lastState.active){$('#generate').disabled=true;$('#scenario').disabled=true;}
+ await renderComparison();
+ }catch(error){notice(`Runner unavailable: ${error.message}`,true);}}
+$('#history').onchange=async()=>{selectedId=$('#history').value;comparisonKey='';await refresh();};
+$('#baseline').onchange=async()=>{comparisonKey='';try{await renderComparison();}catch(error){notice(error.message,true);}};
 $('#generate').onclick=async()=>{
  $('#generate').disabled=true;notice('Preparing a constrained plan for your review…');
  try{plan=await api('/api/plans',{scenario:$('#scenario').value});$('#plan').hidden=false;$('#plan-title').textContent=plan.plan.title;$('#plan-rationale').textContent=plan.plan.rationale;$('#plan-source').textContent=plan.source;$('#plan-json').textContent=JSON.stringify(plan.plan,null,2);$('#plan-hash').textContent=`SHA-256 ${plan.hash}`;pill($('#plan-status'),'Pending review','neutral');$('#approve').disabled=false;$('#reject').disabled=false;notice('Review before running. Preparing this plan has not changed any flags.');}catch(error){notice(error.message,true);}finally{$('#generate').disabled=false;}
 };
 $('#reject').onclick=async()=>{try{await api(`/api/plans/${plan.id}/reject`,{});plan.status='rejected';pill($('#plan-status'),'Rejected','neutral');$('#approve').disabled=true;$('#reject').disabled=true;notice('Plan rejected. No flags changed and no browser tests ran.');}catch(error){notice(error.message,true);}};
-$('#approve').onclick=async()=>{try{const run=await api(`/api/plans/${plan.id}/approve`,{hash:plan.hash});plan.status='approved';pill($('#plan-status'),'Approved','pass');$('#approve').disabled=true;$('#reject').disabled=true;notice('Running the reviewed plan. Fresh browser context for each configuration.');renderRun(run);}catch(error){notice(error.message,true);}};
+$('#approve').onclick=async()=>{try{const run=await api(`/api/plans/${plan.id}/approve`,{hash:plan.hash});plan.status='approved';selectedId='';comparisonKey='';pill($('#plan-status'),'Approved','pass');$('#approve').disabled=true;$('#reject').disabled=true;notice('Running the reviewed plan. Fresh browser context for each configuration.');renderRun(run);}catch(error){notice(error.message,true);}};
 $('#cancel').onclick=async()=>{try{await api(`/api/runs/${currentRun.id}/cancel`,{});notice('Cancellation requested. Waiting for the current operation and verified cleanup.');}catch(error){notice(error.message,true);}};
 renderRun(null);await refresh();setInterval(refresh,700);
