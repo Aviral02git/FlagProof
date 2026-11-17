@@ -4,6 +4,10 @@ A private, pre-event prototype built on 17 November 2026. This is working local 
 
 **Review a bounded test plan. Exercise all eight configurations. Inspect real browser evidence.**
 
+## Repository delivery
+
+The private GitHub repository contains the runnable source tree, dependency lockfile, tests, measured JSON reports and verification summary. Original binary screenshots, trace ZIPs and the combined source/evidence archive could not be uploaded through the file-upload form. They are not included in this repository. Run a fresh approved local suite to generate screenshots, traces and reports, or run `npm run capture` for the UI verification flow. No demo is hosted by this repository.
+
 ## Run it
 
 Requirements: Node.js 22 or later, npm, and a Chromium browser. Tested here with Node 22.23.4 and Google Chrome on Linux. Windows and macOS have not been tested.
@@ -73,7 +77,7 @@ node test/capture-ui.mjs
 
 The automated suite covers matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup. It also checks the prepared Flagsmith adapter against simulated responses.
 
-`evidence/` contains the measured reports and dashboard screenshots captured during verification. `artifacts/<run-id>/` contains original screenshots, trace ZIPs and reports from those UI runs. `VERIFICATION.md` identifies the final checks. Example evidence remains available on disk after restart, but dashboard run history is currently in memory only. To generate a new visible run, prepare and approve a plan again.
+`evidence/` in this repository contains the measured JSON reports and test summary captured during verification. Original dashboard screenshots and per-case binary evidence are not committed here. A new local run writes screenshots, trace ZIPs and reports into `artifacts/<run-id>/`. `VERIFICATION.md` identifies the final checks. Example evidence remains available on disk after restart, but dashboard run history is currently in memory only. To generate a new visible run, prepare and approve a plan again.
 
 To inspect a trace locally:
 
@@ -122,7 +126,7 @@ The browser bundle includes the real Flagsmith JS SDK, disables its cache and an
 
 ## Pre-event record and remaining work
 
-This prototype was built on **17 November 2026**, before the advertised hackathon window. Preserve that provenance. No backdating or claim that this code was built during the event. Early-work eligibility and the final submission route remain to be confirmed against the organizer's current rules. This is not a submission and no repository has been published.
+This prototype was built on **17 November 2026**, before the advertised hackathon window. Preserve that provenance. No backdating or claim that this code was built during the event. Early-work eligibility and the final submission route remain to be confirmed against the organizer's current rules. This is not a hackathon submission. The source was placed in a private GitHub repository on 17 November 2026 at the owner's request; it has not been made public.
 
 Next useful integration milestone: with approved dedicated demo access, prove real Flagsmith snapshot → write → browser SDK resolution → eight cases → restoration. Then validate a real constrained model proposal and demonstrate review/rejection. Recheck rules and prepare final repository, README and video before any authorized submission.
 
