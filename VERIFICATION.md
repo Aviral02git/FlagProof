@@ -22,7 +22,7 @@ These runs were started using the visible Prepare / Approve buttons in the dashb
 
 The failing pair was `new_checkout + express_shipping`. Its $115 contract produced a measured $130 receipt. Every proper subset passed. Enabling the promo flag did not remove the defect.
 
-Each final case has a PNG screenshot, Playwright trace ZIP and assertion record under `artifacts/<run-id>/`. Reports are also copied into `evidence/`. The extra seeded case is labelled `reproduce` and is not counted as a ninth matrix combination.
+Each final local case produced a PNG screenshot, Playwright trace ZIP and assertion record. The repository includes the copied JSON reports in `evidence/`, but the original binary screenshots/traces were not uploaded because the file-upload form returned HTTP400. Fresh local runs regenerate evidence in `artifacts/<run-id>/`. The extra seeded case is labelled `reproduce` and is not counted as a ninth matrix combination.
 
 ## Visual and interaction checks
 
@@ -34,7 +34,7 @@ The UI capture also verified plan rejection without starting a new suite. No unc
 
 - This verification used **local-fixture flags** and **manual-template plans** only.
 - Live Flagsmith and local-model adapters are not live-verified. Their presence and simulated contract tests do not complete those integrations.
-- Nothing was deployed, submitted, purchased, or published to a repository. No external account or environment was created or modified.
+- Nothing was deployed, submitted or purchased. After these local checks, the owner requested a private GitHub repository, which now holds the source and text reports. It is not a public release. No external account or environment was created or modified.
 - This is pre-event work with truthful dates. Eligibility for early code remains unconfirmed.
 - Linux / Node 22 / Chromium were tested. Other operating systems and browsers were not tested.
 
