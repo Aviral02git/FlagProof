@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-11-17T18:35:14.146Z",
+  "project": 53752,
+  "demoEnvironment": 117118,
+  "existingFlags": [
+    {
+      "environmentId": 115777,
+      "environmentName": "Development",
+      "featureId": 290172,
+      "unchanged": true,
+      "beforeHash": "1b7d35a928a9534b63ef2956e54a6d33de2b6c03549b83eb75cfccf57d9e9682",
+      "afterHash": "1b7d35a928a9534b63ef2956e54a6d33de2b6c03549b83eb75cfccf57d9e9682"
+    },
+    {
+      "environmentId": 115778,
+      "environmentName": "Production",
+      "featureId": 290172,
+      "unchanged": true,
+      "beforeHash": "1b7d35a928a9534b63ef2956e54a6d33de2b6c03549b83eb75cfccf57d9e9682",
+      "afterHash": "1b7d35a928a9534b63ef2956e54a6d33de2b6c03549b83eb75cfccf57d9e9682"
+    }
+  ],
+  "newFlags": [
+    {
+      "environmentId": 115777,
+      "environmentName": "Development",
+      "feature": "new_checkout",
+      "enabled": false
+    },
+    {
+      "environmentId": 115777,
+      "environmentName": "Development",
+      "feature": "express_shipping",
+      "enabled": false
+    },
+    {
+      "environmentId": 115777,
+      "environmentName": "Development",
+      "feature": "promo_banner",
+      "enabled": false
+    },
+    {
+      "environmentId": 115778,
+      "environmentName": "Production",
+      "feature": "new_checkout",
+      "enabled": false
+    },
+    {
+      "environmentId": 115778,
+      "environmentName": "Production",
+      "feature": "express_shipping",
+      "enabled": false
+    },
+    {
+      "environmentId": 115778,
+      "environmentName": "Production",
+      "feature": "promo_banner",
+      "enabled": false
+    },
+    {
+      "environmentId": 117118,
+      "environmentName": "FlagProof Disposable Demo",
+      "feature": "new_checkout",
+      "enabled": false
+    },
+    {
+      "environmentId": 117118,
+      "environmentName": "FlagProof Disposable Demo",
+      "feature": "express_shipping",
+      "enabled": false
+    },
+    {
+      "environmentId": 117118,
+      "environmentName": "FlagProof Disposable Demo",
+      "feature": "promo_banner",
+      "enabled": false
+    }
+  ],
+  "existingPreserved": true,
+  "allNewFlagsOff": true
+}
