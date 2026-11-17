@@ -5,12 +5,14 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {matrix,expectedTotal,summarize,FLAG_NAMES} from './core.mjs';
 import {equalFlags} from './flags.mjs';
+import {saveReport} from './history.mjs';
+import {reportMarkdown} from './report.mjs';
 export function chromePath(){return process.env.CHROME_PATH|| (existsSync('/usr/bin/google-chrome-stable')?'/usr/bin/google-chrome-stable':undefined);}
 export async function runSuite(run,{adapter,origin,artifactRoot,onUpdate=()=>{}}){
  const dir=path.join(artifactRoot,run.id);await mkdir(dir,{recursive:true});
  let browser,original,lastWritten;
  run.results=[];run.cleanup={status:'not-started'};run.status='running';run.startedAt=new Date().toISOString();
- async function save(){await writeFile(path.join(dir,'report.json'),JSON.stringify(run,null,2));onUpdate(run);}
+ async function save(){await saveReport(dir,run);onUpdate(run);}
  async function testCase(flags,label){
   const id=`case-${String(run.results.length+1).padStart(2,'0')}-${randomUUID().slice(0,6)}`;
   const result={id,label,flags,resolved:null,setup:'pending',status:'running',startedAt:new Date().toISOString(),errors:[],assertions:[],artifacts:{}};
@@ -85,6 +87,7 @@ export async function runSuite(run,{adapter,origin,artifactRoot,onUpdate=()=>{}}
   run.analysisSource='deterministic-evidence-summary';
   run.limitations=['Pre-event local prototype.','Fixture mode is not live Flagsmith integration.','Manual template is not an AI-generated plan.','Synthetic app defect is intentionally seeded; browser outcomes are measured.','One journey and three flags do not prove application correctness.'];
   await save();
+  await writeFile(path.join(dir,'report.md'),reportMarkdown(run));
  }
  return run;
-      }
+}
