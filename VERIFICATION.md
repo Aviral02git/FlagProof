@@ -1,41 +1,35 @@
-# Verification record
+# Verification: evidence upgrade
 
-Pre-event prototype, 17 November 2026. Final browser capture: 2026-11-17T12:57:21.552Z.
+Private pre-event prototype begun 17 November 2026. Verified on Node 22.23.5 and Google Chrome on Linux. Other operating systems remain untested.
 
-## Automated checks
+## Commands
 
-A clean extraction of the delivered source archive passed `npm ci --offline`, `npm run build` and all 20 tests again. This checks that the archive, not only the working folder, is runnable in the tested environment.
+```sh
+npm ci
+npm run build
+CHROME_PATH=/usr/bin/google-chrome npm test
+CHROME_PATH=/usr/bin/google-chrome npm run capture
+CHROME_PATH=/usr/bin/google-chrome node test/capture-upgrade.mjs
+```
 
-`npm run build` succeeded. `npm test`: **20 tests passed, 0 failed**, including real Chromium runs and injected safety failures. The named checks are in `evidence/automated-test-summary.txt`.
+Set `CHROME_PATH` for your machine or install the bundled Playwright Chromium. The path above is this test machine, not a universal install path.
 
-## Final UI-driven measurements
+## Measured results
 
-These runs were started using the visible Prepare / Approve buttons in the dashboard, not by writing results into the UI.
+- Automated suite: **32 tests passed, zero failed**. The prior twenty checks remain passing; twelve new checks cover persisted history, safe interruption, malformed saved records, comparison restrictions, readable reports, history API blocking live writes before any adapter access when cleanup is unresolved, and missing SDK flags being invalid rather than false.
+- Seeded fixture: eight matrix cases, six pass and two fail. The pair `new_checkout` + `express_shipping` fails the $115 independent price contract with a measured $130 total; a ninth fresh browser case reproduces it.
+- Healthy fixture: eight pass, no minimal failing set.
+- Both suites: original flags restored and read-back verified.
+- Expanded subset evidence: all OFF, checkout only and express only each pass, with direct screenshot links.
+- Forward comparison: zero regressions, two improvements, six unchanged. Reverse comparison: two regressions, zero improvements, six unchanged. These are synthetic fixture comparisons, not deployed fixes.
+- A stopped/restarted server reloads both saved suites and their screenshots. No tests are silently resumed.
+- Readable Markdown report downloads successfully. JSON report and case evidence remain available.
+- Chromium UI checks: desktop 1440px, mobile 390px and 320px; no whole-page horizontal overflow or browser page errors. Tables scroll within their panel on small screens.
 
-| | Seeded defect | Healthy control |
-| --- | --- | --- |
-| Run ID | `f5a894db-d051-4666-81d8-2196bc8c3d62` | `99c909f8-46b6-46e5-949d-69ed5dd7d5c4` |
-| Valid matrix cases | 8 | 8 |
-| Pass / fail | 6 / 2 | 8 / 0 |
-| Extra reproduction | Confirmed failure in a fresh browser | Not applicable |
-| Original flag restoration | verified | verified |
+`evidence/upgrade-ui-check.json` and `evidence/upgrade-test-summary.txt` contain machine-captured results. `test/capture-upgrade.mjs` regenerates screenshots and measurements. The source/evidence archive shared privately includes fresh binary screenshots and traces. GitHub's upload widget rejected binary and text file uploads in this session, so only ordinary text-editor commits are relied on for repository delivery. Do not assume original PNGs or trace ZIPs are in the repo.
 
-The failing pair was `new_checkout + express_shipping`. Its $115 contract produced a measured $130 receipt. Every proper subset passed. Enabling the promo flag did not remove the defect.
+## Remaining limits
 
-Each final local case produced a PNG screenshot, Playwright trace ZIP and assertion record. The repository includes the copied JSON reports in `evidence/`, but the original binary screenshots/traces were not uploaded because the file-upload form returned HTTP400. Fresh local runs regenerate evidence in `artifacts/<run-id>/`. The extra seeded case is labelled `reproduce` and is not counted as a ninth matrix combination.
+Default mode is local-fixture and manual-template, not live Flagsmith and not AI. Separate real integration verification in the approved environment used the management API and actual browser SDK: seeded 6 pass / 2 fail plus a reproduced pair, healthy 8 pass, both with verified OFF restoration. Existing `show_demo_button` was unchanged in Development and Production, and the three new definitions were OFF across both originals and the demo. See `evidence/live-*-report.json` and `evidence/live-preservation.json`. Raw live traces are not shared because they can contain SDK keys. This is separate from the simulated contract/SDK tests. The model adapter remains unverified. Live writes are serial, not transactional; partial writes or unknown concurrent edits can require manual restoration. There is no distributed environment lock. Atomic rename is not a guarantee against disk failure or power loss.
 
-## Visual and interaction checks
-
-Actual rendered pixels were inspected for the review panel, completed failing matrix, failure receipt, healthy matrix, and the full dashboard at 320, 390, 1280 and 1440 px. A mobile page overflow was found, corrected, and rechecked. The table intentionally scrolls horizontally at narrow widths and says so; the page itself does not overflow.
-
-The UI capture also verified plan rejection without starting a new suite. No uncaught dashboard page errors were recorded. The API tests cover approval fingerprints, state drift, foreign Origin / missing token rejection, simultaneous approval exclusion and cancellation restoration. The fault tests check invalid setup and failed cleanup without presenting a clean result.
-
-## Boundaries
-
-- This verification used **local-fixture flags** and **manual-template plans** only.
-- Live Flagsmith and local-model adapters are not live-verified. Their presence and simulated contract tests do not complete those integrations.
-- Nothing was deployed, submitted or purchased. After these local checks, the owner requested a private GitHub repository, which now holds the source and text reports. It is not a public release. No external account or environment was created or modified.
-- This is pre-event work with truthful dates. Eligibility for early code remains unconfirmed.
-- Linux / Node 22 / Chromium were tested. Other operating systems and browsers were not tested.
-
-Read `README.md` before any later attempt at live flag writes.
+No public deployment, public repository, paid service or hackathon submission was performed by this verification.
