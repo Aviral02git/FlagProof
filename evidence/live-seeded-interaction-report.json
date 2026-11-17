@@ -1,0 +1,400 @@
+{
+  "id": "72d41d6c-b5be-48c2-b4e0-5d6f163ecaa7",
+  "planId": "28dcf1e9-c12d-4aa8-9fb0-9e71c8eb0a76",
+  "plan": {
+    "title": "Check cart total across three feature flags",
+    "target": "local-checkout",
+    "scenario": "seeded-interaction",
+    "flags": [
+      "new_checkout",
+      "express_shipping",
+      "promo_banner"
+    ],
+    "actions": [
+      "add-item",
+      "complete-checkout"
+    ],
+    "assertions": [
+      "order-confirmed",
+      "correct-total"
+    ],
+    "rationale": "Cover all eight combinations. The independent price contract is one $100 item plus standard $5 or express $15 shipping. Confirm the order and compare the payable total."
+  },
+  "planSource": "manual-template",
+  "mode": "flagsmith",
+  "approvedHash": "fda9cbf9218a5aeb9911ac6ae908422628a2052dd46e00ff6f9db53d5bb3df07",
+  "status": "completed",
+  "results": [
+    {
+      "id": "case-01-bfcc63",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": false,
+        "express_shipping": false,
+        "promo_banner": false
+      },
+      "resolved": {
+        "new_checkout": false,
+        "express_shipping": false,
+        "promo_banner": false
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:30:32.606Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 105,
+          "observed": 105
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-01-bfcc63.png"
+      },
+      "finishedAt": "2026-11-17T18:30:43.491Z"
+    },
+    {
+      "id": "case-02-9b8206",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": true,
+        "express_shipping": false,
+        "promo_banner": false
+      },
+      "resolved": {
+        "new_checkout": true,
+        "express_shipping": false,
+        "promo_banner": false
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:30:43.491Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 105,
+          "observed": 105
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-02-9b8206.png"
+      },
+      "finishedAt": "2026-11-17T18:30:51.126Z"
+    },
+    {
+      "id": "case-03-98d2b3",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": false,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "resolved": {
+        "new_checkout": false,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:30:51.126Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 115,
+          "observed": 115
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-03-98d2b3.png"
+      },
+      "finishedAt": "2026-11-17T18:30:57.518Z"
+    },
+    {
+      "id": "case-04-2127f1",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "resolved": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "setup": "valid",
+      "status": "fail",
+      "startedAt": "2026-11-17T18:30:57.519Z",
+      "errors": [
+        "Demo checkout charged shipping twice.",
+        "Price contract violated: expected $115, observed $130."
+      ],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": false,
+          "expected": 115,
+          "observed": 130
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-04-2127f1.png"
+      },
+      "finishedAt": "2026-11-17T18:31:07.565Z"
+    },
+    {
+      "id": "case-05-f7560d",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": false,
+        "express_shipping": false,
+        "promo_banner": true
+      },
+      "resolved": {
+        "new_checkout": false,
+        "express_shipping": false,
+        "promo_banner": true
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:31:07.565Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 105,
+          "observed": 105
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-05-f7560d.png"
+      },
+      "finishedAt": "2026-11-17T18:31:19.288Z"
+    },
+    {
+      "id": "case-06-651039",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": true,
+        "express_shipping": false,
+        "promo_banner": true
+      },
+      "resolved": {
+        "new_checkout": true,
+        "express_shipping": false,
+        "promo_banner": true
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:31:19.289Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 105,
+          "observed": 105
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-06-651039.png"
+      },
+      "finishedAt": "2026-11-17T18:31:31.925Z"
+    },
+    {
+      "id": "case-07-8984ca",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": false,
+        "express_shipping": true,
+        "promo_banner": true
+      },
+      "resolved": {
+        "new_checkout": false,
+        "express_shipping": true,
+        "promo_banner": true
+      },
+      "setup": "valid",
+      "status": "pass",
+      "startedAt": "2026-11-17T18:31:31.926Z",
+      "errors": [],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": true,
+          "expected": 115,
+          "observed": 115
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-07-8984ca.png"
+      },
+      "finishedAt": "2026-11-17T18:31:39.886Z"
+    },
+    {
+      "id": "case-08-e5f1f9",
+      "label": "matrix",
+      "flags": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": true
+      },
+      "resolved": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": true
+      },
+      "setup": "valid",
+      "status": "fail",
+      "startedAt": "2026-11-17T18:31:39.887Z",
+      "errors": [
+        "Demo checkout charged shipping twice.",
+        "Price contract violated: expected $115, observed $130."
+      ],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": false,
+          "expected": 115,
+          "observed": 130
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-08-e5f1f9.png"
+      },
+      "finishedAt": "2026-11-17T18:31:56.848Z"
+    },
+    {
+      "id": "case-09-9380a1",
+      "label": "reproduce",
+      "flags": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "resolved": {
+        "new_checkout": true,
+        "express_shipping": true,
+        "promo_banner": false
+      },
+      "setup": "valid",
+      "status": "fail",
+      "startedAt": "2026-11-17T18:31:56.849Z",
+      "errors": [
+        "Demo checkout charged shipping twice.",
+        "Price contract violated: expected $115, observed $130."
+      ],
+      "assertions": [
+        {
+          "name": "order-confirmed",
+          "pass": true
+        },
+        {
+          "name": "correct-total",
+          "pass": false,
+          "expected": 115,
+          "observed": 130
+        }
+      ],
+      "artifacts": {
+        "screenshot": "case-09-9380a1.png"
+      },
+      "finishedAt": "2026-11-17T18:32:05.406Z"
+    }
+  ],
+  "cancelRequested": false,
+  "createdAt": "2026-11-17T18:30:30.302Z",
+  "originalFlags": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": false
+  },
+  "cleanup": {
+    "status": "verified",
+    "flags": {
+      "new_checkout": false,
+      "express_shipping": false,
+      "promo_banner": false
+    }
+  },
+  "startedAt": "2026-11-17T18:30:30.305Z",
+  "summary": {
+    "validCases": 8,
+    "invalidCases": 0,
+    "failedCases": 2,
+    "passedCases": 6,
+    "allPassed": false,
+    "minimal": [
+      {
+        "flags": [
+          "new_checkout",
+          "express_shipping"
+        ],
+        "runId": "case-04-2127f1",
+        "passingNeighbours": [
+          "case-01-bfcc63",
+          "case-02-9b8206",
+          "case-03-98d2b3"
+        ]
+      }
+    ],
+    "conclusion": "A minimal failing flag set was observed among the tested configurations. Repeat before trusting the finding."
+  },
+  "reproduction": {
+    "runId": "case-09-9380a1",
+    "confirmed": true
+  },
+  "finishedAt": "2026-11-17T18:32:18.615Z",
+  "analysisSource": "deterministic-evidence-summary",
+  "limitations": [
+    "Pre-event prototype.",
+    "Flagsmith is used only for the approved isolated synthetic checkout; this is not a production test.",
+    "Manual template is not an AI-generated plan.",
+    "Synthetic app defect is intentionally seeded; browser outcomes are measured.",
+    "One journey and three flags do not prove application correctness."
+  ],
+  "integration": {
+    "project": 53752,
+    "environmentId": 117118
+  },
+  "evidencePrivacy": "Raw live traces are excluded because they may contain SDK keys. Live case screenshots are held only in the private source/evidence delivery; file paths in JSON are relative to the recorded run directory."
+    }
