@@ -1,0 +1,207 @@
+> flagproof-pre-event-prototype@0.1.0 test
+> node --test --test-concurrency=1 test/*.test.mjs
+
+TAP version 13
+# Subtest: matrix exhausts all eight distinct boolean configurations
+ok 1 - matrix exhausts all eight distinct boolean configurations
+  ---
+  duration_ms: 0.978964
+  type: 'test'
+  ...
+# Subtest: strict reviewed plan cannot carry executable steps or outside targets
+ok 2 - strict reviewed plan cannot carry executable steps or outside targets
+  ---
+  duration_ms: 3.316757
+  type: 'test'
+  ...
+# Subtest: review record binds an exact valid plan
+ok 3 - review record binds an exact valid plan
+  ---
+  duration_ms: 1.062675
+  type: 'test'
+  ...
+# Subtest: healthy independent totals and seeded truth table
+ok 4 - healthy independent totals and seeded truth table
+  ---
+  duration_ms: 0.1841
+  type: 'test'
+  ...
+# Subtest: minimal observed pair requires every proper subset to pass
+ok 5 - minimal observed pair requires every proper subset to pass
+  ---
+  duration_ms: 1.042116
+  type: 'test'
+  ...
+# Subtest: missing or invalid subset cannot establish a minimal reproducer
+ok 6 - missing or invalid subset cannot establish a minimal reproducer
+  ---
+  duration_ms: 0.375469
+  type: 'test'
+  ...
+# Subtest: healthy full matrix is scoped no-failure result; partial run is not clean
+ok 7 - healthy full matrix is scoped no-failure result; partial run is not clean
+  ---
+  duration_ms: 0.226376
+  type: 'test'
+  ...
+# Subtest: local adapter is isolated and returns copies
+ok 8 - local adapter is isolated and returns copies
+  ---
+  duration_ms: 1.106594
+  type: 'test'
+  ...
+# Subtest: manual plan source never claims model generation
+ok 9 - manual plan source never claims model generation
+  ---
+  duration_ms: 0.848766
+  type: 'test'
+  ...
+# Subtest: running and duplicated cases never count as a clean complete matrix
+ok 10 - running and duplicated cases never count as a clean complete matrix
+  ---
+  duration_ms: 0.460706
+  type: 'test'
+  ...
+# Subtest: atomic saved reports round-trip and ignore unrelated directories
+ok 11 - atomic saved reports round-trip and ignore unrelated directories
+  ---
+  duration_ms: 16.823439
+  type: 'test'
+  ...
+# Subtest: interrupted local work is not resumed and cleanup remains explicitly unknown
+ok 12 - interrupted local work is not resumed and cleanup remains explicitly unknown
+  ---
+  duration_ms: 2.966404
+  type: 'test'
+  ...
+# Subtest: interrupted live run blocks additional live writes without retrying cleanup
+ok 13 - interrupted live run blocks additional live writes without retrying cleanup
+  ---
+  duration_ms: 2.555505
+  type: 'test'
+  ...
+# Subtest: failed live cleanup and corrupt history fail closed
+ok 14 - failed live cleanup and corrupt history fail closed
+  ---
+  duration_ms: 0.488166
+  type: 'test'
+  ...
+# Subtest: malformed and unsafe saved evidence is excluded with a warning
+ok 15 - malformed and unsafe saved evidence is excluded with a warning
+  ---
+  duration_ms: 3.495656
+  type: 'test'
+  ...
+# Subtest: compatible completed suites compare exact configurations in either direction
+ok 16 - compatible completed suites compare exact configurations in either direction
+  ---
+  duration_ms: 1.235363
+  type: 'test'
+  ...
+# Subtest: comparison refuses self, mismatched mode, changed contract and incomplete evidence
+ok 17 - comparison refuses self, mismatched mode, changed contract and incomplete evidence
+  ---
+  duration_ms: 0.585595
+  type: 'test'
+  ...
+# Subtest: readable report includes mode, original state, approval fingerprint and evidence links
+ok 18 - readable report includes mode, original state, approval fingerprint and evidence links
+  ---
+  duration_ms: 0.516324
+  type: 'test'
+  ...
+# Subtest: server reload exposes history, selected run and human-readable report without launching tests
+ok 19 - server reload exposes history, selected run and human-readable report without launching tests
+  ---
+  duration_ms: 36.840368
+  type: 'test'
+  ...
+# Subtest: live recovery gate blocks plan creation before any adapter read or mutation
+ok 20 - live recovery gate blocks plan creation before any adapter read or mutation
+  ---
+  duration_ms: 27.041733
+  type: 'test'
+  ...
+# Subtest: API rejects CSRF, foreign origins, invalid scenario, and rejected plans without mutations
+ok 21 - API rejects CSRF, foreign origins, invalid scenario, and rejected plans without mutations
+  ---
+  duration_ms: 61.316444
+  type: 'test'
+  ...
+# Subtest: state drift since plan review blocks execution
+ok 22 - state drift since plan review blocks execution
+  ---
+  duration_ms: 27.701926
+  type: 'test'
+  ...
+# SEEDED_EVIDENCE /tmp/flagproof-VkzfVe/5ab78602-b0ca-4855-9137-dbafbe0288f0
+# Subtest: seeded fixture runs eight real browser cases, reproduces pair and restores non-default state
+ok 23 - seeded fixture runs eight real browser cases, reproduces pair and restores non-default state
+  ---
+  duration_ms: 8657.947197
+  type: 'test'
+  ...
+# HEALTHY_EVIDENCE /tmp/flagproof-mIpR17/e121f525-5a76-42af-ad2c-c3522864b3ff
+# Subtest: healthy control has eight passes, no minimal culprit and verified restoration
+ok 24 - healthy control has eight passes, no minimal culprit and verified restoration
+  ---
+  duration_ms: 7339.283942
+  type: 'test'
+  ...
+# Subtest: cancellation runs verified cleanup instead of presenting a clean result
+ok 25 - cancellation runs verified cleanup instead of presenting a clean result
+  ---
+  duration_ms: 1131.41276
+  type: 'test'
+  ...
+# Subtest: two simultaneous approvals cannot launch overlapping flag writers
+ok 26 - two simultaneous approvals cannot launch overlapping flag writers
+  ---
+  duration_ms: 1124.068001
+  type: 'test'
+  ...
+# Subtest: unverified live adapter contract: strict config, server-only key and bounded PATCH shape
+ok 27 - unverified live adapter contract: strict config, server-only key and bounded PATCH shape
+  ---
+  duration_ms: 4.525442
+  type: 'test'
+  ...
+# Subtest: unverified live adapter refuses variants, overrides and bad API responses
+ok 28 - unverified live adapter refuses variants, overrides and bad API responses
+  ---
+  duration_ms: 1.007115
+  type: 'test'
+  ...
+# Subtest: invalid setup stops the matrix and still restores the original local state
+ok 29 - invalid setup stops the matrix and still restores the original local state
+  ---
+  duration_ms: 1092.417821
+  type: 'test'
+  ...
+# Subtest: failed cleanup is explicit and overrides any completed status
+ok 30 - failed cleanup is explicit and overrides any completed status
+  ---
+  duration_ms: 2489.673544
+  type: 'test'
+  ...
+# Subtest: real SDK bundle accepts all three present false flags using simulated SDK HTTP responses
+ok 31 - real SDK bundle accepts all three present false flags using simulated SDK HTTP responses
+  ---
+  duration_ms: 1687.846348
+  type: 'test'
+  ...
+# Subtest: missing SDK flags are invalid setup, never mistaken for valid false flags
+ok 32 - missing SDK flags are invalid setup, never mistaken for valid false flags
+  ---
+  duration_ms: 1618.483807
+  type: 'test'
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 32
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27830.551831
