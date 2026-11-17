@@ -6,12 +6,13 @@ export class LocalFixtureAdapter {
  async set(next){this.state=FlagState.parse(next);return this.read();}
  publicConfig(){return {mode:this.mode,label:this.label};}
 }
-// Prepared from Flagsmith's documented experimental flag endpoints. NOT live-verified.
+// Uses documented experimental endpoints. Verified on the approved isolated demo in Nov 2026.
+// That verification does not make this a transactional or production-safe adapter.
 // This adapter is deliberately opt-in and supports only plain boolean flags without overrides/variants.
 export class FlagsmithAdapter {
  constructor(env=process.env){
   if(env.FLAGPROOF_ALLOW_LIVE!=='I_APPROVE_ISOLATED_DEMO_WRITES')throw new Error('Live writes require explicit isolated-demo opt-in. Read README first.');
-  this.mode='flagsmith';this.label='FLAGSMITH · adapter not live-verified';
+  this.mode='flagsmith';this.label='FLAGSMITH API + SDK · isolated demo';
   this.key=env.FLAGSMITH_MANAGEMENT_KEY;this.environment=env.FLAGSMITH_ENVIRONMENT_KEY;
   try{this.ids=JSON.parse(env.FLAGSMITH_FEATURE_IDS||'{}');}catch{throw new Error('Invalid feature ID configuration');}
   if(!this.key||!this.environment||!FLAG_NAMES.every(n=>Number.isInteger(this.ids[n])&&this.ids[n]>0))throw new Error('Flagsmith keys or feature IDs missing. Never put management keys in the browser.');
