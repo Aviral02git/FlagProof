@@ -4,3 +4,5 @@
 .workspace>.panel,.intro>*{min-width:0}.matrix-scroll{max-width:100%}
 
 .scroll-hint{display:none}@media(max-width:600px){.scroll-hint{display:block;margin:12px 0 0;font-size:9px}}
+
+.history-tools{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}.history-tools>div{min-width:0}.history-tools label{margin:0 0 8px}.history-tools select{font-size:10px;margin:0;min-width:0}.comparison{margin-top:22px;border:1px solid var(--line);background:var(--paper);border-radius:7px;padding:18px}.comparison h3{font-size:18px}.comparison table{min-width:330px}.subset-evidence{margin-top:18px;border-top:1px solid #edccba;padding-top:14px}.subset-evidence li{font-size:11px;line-height:1.8;overflow-wrap:anywhere}.subset-evidence ul{padding-left:16px}@media(max-width:600px){.history-tools{grid-template-columns:1fr}.comparison{padding:12px}}
