@@ -5,7 +5,10 @@ try {
  let flags;
  if(config.mode==='flagsmith'){
   await flagsmith.init({environmentID:config.environmentID,api:config.api,cacheFlags:false,enableAnalytics:false});
-  await flagsmith.getFlags();flags=Object.fromEntries(['new_checkout','express_shipping','promo_banner'].map(n=>[n,flagsmith.hasFeature(n)]));
+  await flagsmith.getFlags();
+  const all=flagsmith.getAllFlags();
+  for(const name of ['new_checkout','express_shipping','promo_banner'])if(!Object.hasOwn(all,name)||typeof all[name].enabled!=='boolean')throw new Error('Required demo flag missing or invalid in SDK response.');
+  flags=Object.fromEntries(['new_checkout','express_shipping','promo_banner'].map(n=>[n,flagsmith.hasFeature(n)]));
  }else flags=config.flags;
  window.resolvedFlags=flags;window.flagproofReady=true;
  $('#mode').textContent=config.label;
