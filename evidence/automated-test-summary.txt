@@ -1,0 +1,28 @@
+ok 1 - matrix exhausts all eight distinct boolean configurations
+ok 2 - strict reviewed plan cannot carry executable steps or outside targets
+ok 3 - review record binds an exact valid plan
+ok 4 - healthy independent totals and seeded truth table
+ok 5 - minimal observed pair requires every proper subset to pass
+ok 6 - missing or invalid subset cannot establish a minimal reproducer
+ok 7 - healthy full matrix is scoped no-failure result; partial run is not clean
+ok 8 - local adapter is isolated and returns copies
+ok 9 - manual plan source never claims model generation
+ok 10 - running and duplicated cases never count as a clean complete matrix
+ok 11 - API rejects CSRF, foreign origins, invalid scenario, and rejected plans without mutations
+ok 12 - state drift since plan review blocks execution
+ok 13 - seeded fixture runs eight real browser cases, reproduces pair and restores non-default state
+ok 14 - healthy control has eight passes, no minimal culprit and verified restoration
+ok 15 - cancellation runs verified cleanup instead of presenting a clean result
+ok 16 - two simultaneous approvals cannot launch overlapping flag writers
+ok 17 - unverified live adapter contract: strict config, server-only key and bounded PATCH shape
+ok 18 - unverified live adapter refuses variants, overrides and bad API responses
+ok 19 - invalid setup stops the matrix and still restores the original local state
+ok 20 - failed cleanup is explicit and overrides any completed status
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14836.988264
