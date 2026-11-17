@@ -85,9 +85,9 @@ export async function runSuite(run,{adapter,origin,artifactRoot,onUpdate=()=>{}}
   run.finishedAt=new Date().toISOString();
   if(!run.summary)run.summary=summarize(run.results.filter(r=>r.label==='matrix'));
   run.analysisSource='deterministic-evidence-summary';
-  run.limitations=['Pre-event local prototype.','Fixture mode is not live Flagsmith integration.','Manual template is not an AI-generated plan.','Synthetic app defect is intentionally seeded; browser outcomes are measured.','One journey and three flags do not prove application correctness.'];
+  run.limitations=['Pre-event prototype.',run.mode==='flagsmith'?'Flagsmith is used only for the approved isolated synthetic checkout; this is not a production test.':'Fixture mode is not live Flagsmith integration.',run.planSource?.startsWith('local-ollama:')?'Model-proposed plan still requires review.':'Manual template is not an AI-generated plan.','Synthetic app defect is intentionally seeded; browser outcomes are measured.','One journey and three flags do not prove application correctness.'];
   await save();
   await writeFile(path.join(dir,'report.md'),reportMarkdown(run));
  }
  return run;
-}
+    }
