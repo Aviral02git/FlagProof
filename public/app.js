@@ -56,7 +56,7 @@ async function renderComparison(){
  $('#comparison').innerHTML=result.comparable?`<p class="eyebrow">MEASURED RUN COMPARISON</p><h3>${result.regressions} regressions · ${result.improvements} improvements</h3><p class="small">${result.unchanged} unchanged. Baseline ${esc(baseline.slice(0,8))} → selected ${esc(currentRun.id.slice(0,8))}. ${esc(result.scope)}</p><div class="matrix-scroll"><table><thead><tr><th>Checkout / Express / Promo</th><th>Baseline</th><th>Selected</th></tr></thead><tbody>${result.rows.map(r=>`<tr><td>${names.map(n=>r.flags[n]?'ON':'OFF').join(' / ')}</td><td>${esc(r.before)}</td><td>${esc(r.after)}</td></tr>`).join('')}</tbody></table></div>`:`<h3>Comparison withheld</h3><p class="small">${esc(result.reason)}</p>`;
 }
 async function refresh(){try{
- lastState=await api('/api/state');token=lastState.token;$('#mode').textContent=lastState.modeLabel;$('#planner').textContent=`Plan source: ${lastState.planner}`;
+ lastState=await api('/api/state');token=lastState.token;document.querySelector('.top-note').textContent=lastState.hosted?'HOSTED DEMO / PRE-EVENT PROTOTYPE':'PRIVATE / PRE-EVENT PROTOTYPE';$('#mode').textContent=lastState.modeLabel;$('#planner').textContent=`Plan source: ${lastState.planner}`;
  $('#integration-note').textContent=lastState.mode==='flagsmith'?'Flagsmith management API and browser SDK are selected for an isolated demo environment. Each case must verify both management read-back and SDK-resolved state. Inspect this run before claiming success. The checkout remains synthetic; manual-template planning is not AI.':'Default flag state is local, not Flagsmith. Plans come from a manual template, not an AI model. An isolated Flagsmith configuration must be verified by its measured report. A passing matrix only covers this journey and these eight configurations.';
  if(lastState.active)selectedId='';
  const run=selectedId?(lastState.recent.find(r=>r.id===selectedId)||await api(`/api/runs/${selectedId}`)):lastState.active||lastState.recent[0];
@@ -66,7 +66,7 @@ async function refresh(){try{
  $('#history').disabled=!!lastState.active;
  if(lastState.active){$('#generate').disabled=true;$('#scenario').disabled=true;}
  await renderComparison();
- }catch(error){notice(`Runner unavailable: ${error.message}`,true);}}
+ }catch(error){if(String(error.message).includes('Demo locked')){$('#lock').hidden=false;return;}notice(`Runner unavailable: ${error.message}`,true);}}
 $('#history').onchange=async()=>{selectedId=$('#history').value;comparisonKey='';await refresh();};
 $('#baseline').onchange=async()=>{comparisonKey='';try{await renderComparison();}catch(error){notice(error.message,true);}};
 $('#generate').onclick=async()=>{
@@ -76,4 +76,5 @@ $('#generate').onclick=async()=>{
 $('#reject').onclick=async()=>{try{await api(`/api/plans/${plan.id}/reject`,{});plan.status='rejected';pill($('#plan-status'),'Rejected','neutral');$('#approve').disabled=true;$('#reject').disabled=true;notice('Plan rejected. No flags changed and no browser tests ran.');}catch(error){notice(error.message,true);}};
 $('#approve').onclick=async()=>{try{const run=await api(`/api/plans/${plan.id}/approve`,{hash:plan.hash});plan.status='approved';selectedId='';comparisonKey='';pill($('#plan-status'),'Approved','pass');$('#approve').disabled=true;$('#reject').disabled=true;notice('Running the reviewed plan. Fresh browser context for each configuration.');renderRun(run);}catch(error){notice(error.message,true);}};
 $('#cancel').onclick=async()=>{try{await api(`/api/runs/${currentRun.id}/cancel`,{});notice('Cancellation requested. Waiting for the current operation and verified cleanup.');}catch(error){notice(error.message,true);}};
+$('#lock-form').onsubmit=async event=>{event.preventDefault();$('#lock-error').textContent='';try{const response=await fetch('/api/enter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('#lock-password').value})});const data=await response.json().catch(()=>({}));if(!response.ok){$('#lock-error').textContent=data.error||'Wrong demo password.';return;}$('#lock').hidden=true;notice('');await refresh();}catch{$('#lock-error').textContent='Could not reach the demo server.';}};
 renderRun(null);await refresh();setInterval(refresh,700);

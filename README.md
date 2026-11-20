@@ -41,6 +41,24 @@ Open the printed local address. The dashboard shows **FLAGSMITH API + SDK** mode
 
 No actual order or charge is made.
 
+## Hosted public demo
+
+`FLAGPROOF_PUBLIC=1` runs FlagProof as a locked public demo for hosted
+evaluation. In this mode the bundled local fixture is forced on and live flag
+providers stay off. Each visitor gets an isolated session, plans and runs are
+visible only to the visit that created them, and suite starts are rate limited
+per IP with a daily cap. Artifacts expire automatically.
+
+Required: `PUBLIC_ORIGIN` (the public URL of the deployment).
+Optional: `PUBLIC_DEMO_PASSWORD` (entry password; without it the demo is
+open), `TRUST_PROXY=1` (only behind a proxy you control, so per IP limits see
+real client IPs).
+
+This mode is built for fixture-only hosted evaluation during the hackathon.
+The protections above are covered by automated tests, but a public demo is
+not production infrastructure and makes no production security guarantee.
+Local private use is unchanged.
+
 ## Offline mode
 
 Without `.env`, the app runs against a bundled local fixture adapter (clearly labelled LOCAL FIXTURE in the UI). Useful for trying the flow without a Flagsmith account; the Flagsmith-backed mode above is the primary path.

@@ -29,6 +29,6 @@ export class FlagsmithAdapter {
  async read(){const entries=await Promise.all(FLAG_NAMES.map(async n=>[n,await this.request(n)]));return FlagState.parse(Object.fromEntries(entries));}
  async set(next){const valid=FlagState.parse(next);await this.read();for(const n of FLAG_NAMES)await this.request(n,'PATCH',valid[n]);return this.read();}
 }
-export function createAdapter(){return process.env.FLAGPROOF_MODE==='flagsmith'?new FlagsmithAdapter():new LocalFixtureAdapter();}
+export function createAdapter(){return process.env.FLAGPROOF_PUBLIC==='1'?new LocalFixtureAdapter():process.env.FLAGPROOF_MODE==='flagsmith'?new FlagsmithAdapter():new LocalFixtureAdapter();}
 export function equalFlags(a,b){return FLAG_NAMES.every(n=>a?.[n]===b?.[n]);}
 export async function waitFlags(read,expected,{attempts=20,interval=150}={}){for(let i=0;i<attempts;i++){const current=await read();if(equalFlags(current,expected))return current;await delay(interval);}throw new Error('Requested flag state did not resolve before timeout.');}
