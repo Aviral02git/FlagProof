@@ -31,7 +31,7 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
     if(req.headers['x-flagproof-token']!==csrf)return json(res,403,{error:'Missing local action token'});
    }
    if(pathname==='/favicon.ico'&&req.method==='GET'){res.writeHead(204);return res.end();}
-   if(pathname==='/api/state'&&req.method==='GET')return json(res,200,{mode:adapter.mode,modeLabel:adapter.label,planner:process.env.FLAGPROOF_PLANNER==='ollama'?'local-ollama (not yet verified)':'manual-template (not AI)',token:csrf,active:active?runs.get(active):null,recoveryBlock:blocked(),historyWarnings,recent:[...runs.values()].reverse().slice(0,12),preEvent:true});
+   if(pathname==='/api/state'&&req.method==='GET')return json(res,200,{mode:adapter.mode,modeLabel:adapter.label,planner:process.env.FLAGPROOF_PLANNER==='ollama'?(process.env.OLLAMA_MODEL==='qwen2.5:0.5b'?'local-ollama:qwen2.5:0.5b (verified 2026-11-20)':`local-ollama:${process.env.OLLAMA_MODEL||'unset'} (untested model)`):'manual-template (not AI)',token:csrf,active:active?runs.get(active):null,recoveryBlock:blocked(),historyWarnings,recent:[...runs.values()].reverse().slice(0,12),preEvent:true});
    if(pathname==='/api/demo-config'&&req.method==='GET')return json(res,200,{...adapter.publicConfig(),scenario:active?runs.get(active)?.plan.scenario:'seeded-interaction',flags:adapter.mode==='local-fixture'?await adapter.read():undefined});
    if(pathname==='/api/plans'&&req.method==='POST'){
     if(blocked())return json(res,409,{error:blocked()});

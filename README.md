@@ -59,7 +59,7 @@ Without `.env`, the app runs against a bundled local fixture adapter (clearly la
 | Restoration with read-back, cancellation and explicit failed-cleanup state | Tested locally, including injected failures |
 | Durable history, interruption detection, compatible-run comparison, readable Markdown evidence reports | Working and browser-tested |
 | Responsive dashboard at 320, 390, 1280 and 1440 px | Checked in Chromium |
-| AI-generated plan using a local Ollama model | **Prepared adapter only; not model-tested** |
+| AI-generated plan using a local Ollama model | **Verified with qwen2.5:0.5b on 20 Nov 2026 across both bundled fixtures** (schema-checked plans, scenario guard, explicit failure, no silent fallback). Other models untested; review stays mandatory. |
 | AI-authored result explanation | **Not implemented**. The summary is deterministic. |
 | Production app targeting, CI, multi-user isolation, deployment | **Not implemented** |
 
@@ -83,7 +83,7 @@ The verified Flagsmith run covered the selected disposable environment only: pla
 npm test
 ```
 
-Forty-six automated tests cover matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup, the Flagsmith adapter and SDK bundle against simulated responses, and the guided setup checks: flag discovery, override/variant/malformed rejection, key routing, `.env` handling and secret-leakage guards.
+Fifty-one automated tests cover matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup, the Flagsmith adapter and SDK bundle against simulated responses, the guided setup checks (flag discovery, override/variant/malformed rejection, key routing, `.env` handling and secret-leakage guards), and the AI planner against mocked model responses: valid-plan acceptance, schema-violation rejection, scenario-change rejection, explicit API failure with no silent fallback, and the manual path never calling the model.
 
 ## Provenance
 
