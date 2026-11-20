@@ -9,7 +9,8 @@
     "build": "esbuild src/demo-browser.js --bundle --format=esm --outfile=public/demo.js",
     "start": "npm run build && node src/server.mjs",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
-    "capture": "node test/capture-ui.mjs"
+    "capture": "node test/capture-ui.mjs",
+    "setup:flagsmith": "node scripts/setup-flagsmith.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

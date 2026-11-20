@@ -83,6 +83,9 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
  return {server,origin,adapter,plans,runs,getActive:()=>active,close:async()=>{if(active)runs.get(active).cancelRequested=true;while(active)await new Promise(r=>setTimeout(r,100));return new Promise(r=>server.close(r));}};
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)){
- const app=await startServer();console.log(`FlagProof pre-event prototype: ${app.origin}`);console.log('Local fixture and manual plan by default. No live account integration claimed.');
+ const {loadDotEnv}=await import('./env.mjs');
+ const dotenv=await loadDotEnv();
+ const app=await startServer();console.log(`FlagProof pre-event prototype: ${app.origin}`);
+ console.log(dotenv?`Loaded .env. Mode: ${app.adapter.mode} (${app.adapter.label}).`:'No .env found. Local fixture and manual plan by default; run npm run setup:flagsmith to use a real Flagsmith environment.');
  process.on('SIGINT',async()=>{console.log('Stopping, waiting for cleanup...');await app.close();process.exit(0);});
   }
