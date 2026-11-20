@@ -8,7 +8,7 @@ import {equalFlags} from './flags.mjs';
 import {saveReport} from './history.mjs';
 import {reportMarkdown} from './report.mjs';
 export function chromePath(){return process.env.CHROME_PATH|| (existsSync('/usr/bin/google-chrome-stable')?'/usr/bin/google-chrome-stable':undefined);}
-export async function runSuite(run,{adapter,origin,artifactRoot,onUpdate=()=>{}}){
+export async function runSuite(run,{adapter,origin,artifactRoot,runnerCookie,onUpdate=()=>{}}){
  const dir=path.join(artifactRoot,run.id);await mkdir(dir,{recursive:true});
  let browser,original,lastWritten;
  run.results=[];run.cleanup={status:'not-started'};run.status='running';run.startedAt=new Date().toISOString();
@@ -24,6 +24,7 @@ export async function runSuite(run,{adapter,origin,artifactRoot,onUpdate=()=>{}}
    lastWritten=flags;await adapter.set(flags); // remember partial-write target so cleanup still runs on error
    const readBack=await adapter.read();if(!equalFlags(readBack,flags))throw new Error('Management read-back mismatch');
    context=await browser.newContext({viewport:{width:1100,height:760}});
+   if(runnerCookie)await context.addCookies([runnerCookie]);
    await context.tracing.start({screenshots:true,snapshots:true,sources:true});
    const page=await context.newPage();
    page.on('pageerror',e=>result.errors.push(e.message.slice(0,2000)));

@@ -19,6 +19,7 @@ async function startPublic(t,{password=''}={}){
  const artifactRoot=await mkdtemp(path.join(os.tmpdir(),'fp-public-'));
  const app=await startServer({port:Number(process.env.PUBLIC_ORIGIN.split(':').pop()),artifactRoot});
  t.after(async()=>{delete process.env.FLAGPROOF_PUBLIC;delete process.env.PUBLIC_ORIGIN;delete process.env.PUBLIC_DEMO_PASSWORD;await app.close();});
+ app.artifactRoot=artifactRoot;
  return app;
 }
 function client(base){
@@ -124,4 +125,46 @@ test('two visitors get different tokens and cannot see each other\'s plans, runs
  const second=await b.call('POST',`/api/plans/${pb.id}/approve`,{token:sb.token,body:{hash:pb.hash}});
  assert.equal(second.status,429);
  assert.match(second.data.error,/Try again in \d+s/);
+});
+test('suite completes behind the entry password: the runner uses a run-scoped ticket, never the visitor session',async t=>{
+ const app=await startPublic(t,{password:'demo-pass-123'});
+ const base=app.origin;
+ let cookie='';
+ const call=async(method,p,{token,body}={})=>{const res=await fetch(base+p,{method,headers:{...(cookie?{cookie}:{}),...(token?{'x-flagproof-token':token}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const sc=res.headers.get('set-cookie');if(sc)cookie=sc.split(';')[0];let data=null;try{data=await res.json();}catch{}return {status:res.status,data};};
+ const raw=(method,p,ck)=>fetch(base+p,{method,headers:{cookie:ck}});
+ assert.equal((await call('GET','/api/state')).status,403);
+ assert.equal((await call('POST','/api/enter',{body:{password:'demo-pass-123'}})).status,200);
+ const sid=cookie.split('=')[1];
+ const sa=(await call('GET','/api/state')).data;
+ const plan=(await call('POST','/api/plans',{token:sa.token,body:{scenario:'healthy'}})).data;
+ assert.ok(plan.id);
+ const appr=await call('POST',`/api/plans/${plan.id}/approve`,{token:sa.token,body:{hash:plan.hash}});
+ assert.equal(appr.status,202);
+ const runId=appr.data.id;
+ const ticket=app.runnerTickets.get(runId);
+ assert.ok(ticket,'approve must issue a run-scoped ticket');
+ const tk=`fp_run=${runId}:${ticket}`;
+ // While the run is active the ticket opens only the fixture config read, nothing else.
+ assert.equal((await raw('GET','/api/demo-config',tk)).status,200);
+ assert.equal((await raw('GET','/api/state',tk)).status,403);
+ assert.equal((await raw('GET',`/api/runs/${runId}`,tk)).status,403);
+ assert.equal((await raw('GET',`/artifacts/${runId}/report.md`,tk)).status,403);
+ assert.equal((await raw('POST','/api/plans',tk)).status,403);
+ assert.equal((await raw('POST','/api/demo-config',tk)).status,403);
+ for(let i=0;i<60;i++){const st=await call('GET',`/api/runs/${runId}`);if(st.status===200&&['completed','error'].includes(st.data.status))break;await new Promise(r=>setTimeout(r,1000));}
+ const done=(await call('GET',`/api/runs/${runId}`)).data;
+ assert.equal(done.status,'completed');
+ assert.equal(done.results.filter(r=>r.status==='pass').length,8);
+ // The real ticket is dead once the run slot cleared.
+ assert.equal((await raw('GET','/api/demo-config',tk)).status,403);
+ // Downloadable evidence must not carry the visitor session credential. These checks fail closed.
+ const report=await (await fetch(base+`/artifacts/${runId}/report.md`,{headers:{cookie}})).text();
+ assert.ok(!report.includes(sid));
+ const {execSync}=await import('node:child_process');
+ const zip=execSync(`find ${app.artifactRoot} -name 'case-01-*.zip'`).toString().trim().split('\n')[0];
+ assert.ok(zip,'suite must leave a trace zip for case 01');
+ const traceText=execSync(`unzip -p ${zip}`).toString();
+ assert.ok(traceText.length>0,'trace zip must decode');
+ assert.ok(!traceText.includes(sid),'trace must not contain the visitor session id');
+ assert.ok(traceText.includes('fp_run'),'trace carries the run-scoped ticket, dead once the run slot clears');
 });

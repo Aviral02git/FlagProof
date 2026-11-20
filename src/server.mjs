@@ -15,6 +15,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
 export async function startServer({port=Number(process.env.PORT||4317),artifactRoot=path.join(ROOT,'artifacts'),adapter=createAdapter()}={}){
  await mkdir(artifactRoot,{recursive:true});
  const csrf=randomBytes(24).toString('hex');let active=null;let planning=false;let approving=false;const plans=new Map();
+ const runnerTickets=new Map(); // run-scoped tickets: let the server-side runner read only the fixture config, only while its run is active; never the visitor session
  const publicMode=process.env.FLAGPROOF_PUBLIC==='1';const trustProxy=process.env.TRUST_PROXY==='1';let guard=null;
  const {runs,warnings:historyWarnings}=publicMode?{runs:new Map(),warnings:[]}:await loadHistory(artifactRoot);
  const blocked=()=>recoveryBlock(runs,historyWarnings,adapter.mode);
@@ -33,7 +34,11 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
     if(req.headers.host!==new URL(origin).host)return json(res,403,{error:'Untrusted Host'});
     sess=guard.session(req,res);
     if(pathname==='/api/enter'&&req.method==='POST'){const input=await body(req);return guard.tryEnter(sess,input.password)?json(res,200,{ok:true}):json(res,403,{error:'Wrong demo password'});}
-    if((pathname.startsWith('/api/')||pathname.startsWith('/artifacts/'))&&!sess.authed)return json(res,403,{error:'Demo locked. Enter the demo password.'});
+    if((pathname.startsWith('/api/')||pathname.startsWith('/artifacts/'))&&!sess.authed){
+     const ticket=(req.headers.cookie||'').split(';').map(p=>p.trim().split('=')).find(a=>a[0]==='fp_run');
+     const expected=active?runnerTickets.get(active):null;
+     if(!(req.method==='GET'&&pathname==='/api/demo-config'&&ticket&&expected&&ticket[1]===`${active}:${expected}`))return json(res,403,{error:'Demo locked. Enter the demo password.'});
+    }
    }
    if(req.method==='POST'){
     if(req.headers.origin&&req.headers.origin!==origin)return json(res,403,{error:'Cross-origin writes blocked'});
@@ -66,8 +71,8 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
     record.status='approved';const run={id:randomUUID(),planId:record.id,plan:valid,planSource:record.source,mode:adapter.mode,approvedHash:record.hash,status:'queued',results:[],cancelRequested:false};
     run.createdAt=new Date().toISOString();run.originalFlags={...record.initialFlags};run.cleanup={status:'not-started'};run.owner=publicMode?sess.id:null;
     await mkdir(path.join(artifactRoot,run.id),{recursive:true});await saveReport(path.join(artifactRoot,run.id),run);
-    runs.set(run.id,run);active=run.id;if(publicMode)sess.runs.add(run.id);
-    setImmediate(()=>runSuite(run,{adapter,origin,artifactRoot}).catch(error=>{run.status='error';run.error=`Runner persistence failed: ${error.message}`;run.cleanup=run.cleanup||{status:'unknown'};}).finally(()=>{active=null;if(publicMode)guard.sweep(runs).catch(()=>{});}));
+    runs.set(run.id,run);active=run.id;if(publicMode){sess.runs.add(run.id);runnerTickets.set(run.id,randomBytes(24).toString('hex'));}
+    setImmediate(()=>runSuite(run,{adapter,origin,artifactRoot,runnerCookie:publicMode?{name:'fp_run',value:`${run.id}:${runnerTickets.get(run.id)}`,url:origin}:undefined}).catch(error=>{run.status='error';run.error=`Runner persistence failed: ${error.message}`;run.cleanup=run.cleanup||{status:'unknown'};}).finally(()=>{active=null;runnerTickets.delete(run.id);if(publicMode)guard.sweep(runs).catch(()=>{});}));
     return json(res,202,run);
     }finally{approving=false;}
    }
@@ -93,7 +98,7 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
  await new Promise(resolve=>server.listen(port,publicMode?'0.0.0.0':'127.0.0.1',resolve));
  origin=publicMode?process.env.PUBLIC_ORIGIN.replace(/\/$/,''):`http://127.0.0.1:${server.address().port}`;
  if(publicMode)guard=createPublicGuard({origin,password:process.env.PUBLIC_DEMO_PASSWORD||'',artifactRoot});
- return {server,origin,adapter,plans,runs,getActive:()=>active,close:async()=>{if(active)runs.get(active).cancelRequested=true;while(active)await new Promise(r=>setTimeout(r,100));return new Promise(r=>server.close(r));}};
+ return {server,origin,adapter,plans,runs,runnerTickets,getActive:()=>active,close:async()=>{if(active)runs.get(active).cancelRequested=true;while(active)await new Promise(r=>setTimeout(r,100));return new Promise(r=>server.close(r));}};
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)){
  const {loadDotEnv}=await import('./env.mjs');
