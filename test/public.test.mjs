@@ -47,6 +47,17 @@ test('public mode refuses to start without PUBLIC_ORIGIN',async t=>{
  await assert.rejects(()=>startServer({port:0,artifactRoot}),/PUBLIC_ORIGIN/);
  delete process.env.FLAGPROOF_PUBLIC;
 });
+test('clientIp trusts a single forwarded entry only behind a trusted proxy; spoofed chains fall back to the peer address',async()=>{
+ const {createPublicGuard}=await import('../src/public-guard.mjs');
+ const {clientIp}=createPublicGuard({origin:'http://127.0.0.1:9',password:'',artifactRoot:await mkdtemp(path.join(os.tmpdir(),'fp-guard-'))});
+ const req=xff=>({headers:xff===undefined?{}:{'x-forwarded-for':xff},socket:{remoteAddress:'10.9.9.9'}});
+ assert.equal(clientIp(req('1.2.3.4'),true),'1.2.3.4');
+ assert.equal(clientIp(req('1.2.3.4, 5.6.7.8'),true),'10.9.9.9');
+ assert.equal(clientIp(req('1.2.3.4'),false),'10.9.9.9');
+ assert.equal(clientIp(req(' , ,'),true),'10.9.9.9');
+ assert.equal(clientIp(req(undefined),true),'10.9.9.9');
+});
+
 test('locked demo serves an unlock form wired to /api/enter',async t=>{
  const app=await startPublic(t);
  const state=(await (await fetch(app.origin+'/api/state')).json());

@@ -1,0 +1,12 @@
+node_modules
+artifacts
+.git
+.env
+.env.*
+*.pem
+*.key
+recordings
+*.mp4
+evidence
+test
+scripts

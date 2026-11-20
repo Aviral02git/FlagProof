@@ -19,8 +19,12 @@ export function createPublicGuard({origin,password,artifactRoot}){
   res.setHeader('Set-Cookie',`${COOKIE}=${s.id}; HttpOnly; SameSite=Lax; Path=/${secure?'; Secure':''}`);
   return s;
  }
+ // Spoof-resistant: a client can add its own X-Forwarded-For entries, so a trusted
+ // proxy chain can carry attacker-chosen leading values. Trust the header only when
+ // it holds exactly one entry (a proxy that overwrote it, or an unspoofed append).
+ // Anything longer falls back to the direct peer address.
  function clientIp(req,trustProxy){
-  if(trustProxy){const xff=req.headers['x-forwarded-for'];if(typeof xff==='string'&&xff.trim())return xff.split(',')[0].trim();}
+  if(trustProxy){const xff=req.headers['x-forwarded-for'];if(typeof xff==='string'){const parts=xff.split(',').map(p=>p.trim()).filter(Boolean);if(parts.length===1)return parts[0];}}
   return req.socket.remoteAddress||'unknown';
  }
  function tryEnter(s,candidate){
