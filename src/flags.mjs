@@ -17,7 +17,7 @@ export class FlagsmithAdapter {
   try{this.ids=JSON.parse(env.FLAGSMITH_FEATURE_IDS||'{}');}catch{throw new Error('Invalid feature ID configuration');}
   if(!this.key||!this.environment||!FLAG_NAMES.every(n=>Number.isInteger(this.ids[n])&&this.ids[n]>0))throw new Error('Flagsmith keys or feature IDs missing. Never put management keys in the browser.');
  }
- publicConfig(){return {mode:this.mode,label:this.label,environmentID:this.environment,api:'https://edge.api.flagsmith.com/api/v1/'};}
+ publicConfig(){return {mode:this.mode,label:this.label,environmentID:this.environment,api:process.env.FLAGSMITH_API_URL||'https://edge.api.flagsmith.com/api/v1/'};}
  async request(name,method='GET',enabled){
   const url=`https://api.flagsmith.com/api/__future__/environments/${encodeURIComponent(this.environment)}/features/${this.ids[name]}/`;
   const response=await fetch(url,{method,headers:{Authorization:`Api-Key ${this.key}`,'Content-Type':'application/json'},body:method==='PATCH'?JSON.stringify({environment_default:{enabled}}):undefined,signal:AbortSignal.timeout(10000)});

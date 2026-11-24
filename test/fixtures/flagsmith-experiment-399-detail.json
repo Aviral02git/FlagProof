@@ -1,0 +1,15 @@
+{
+  "id": 399,
+  "name": "Checkout CTA copy test",
+  "feature": {
+    "id": 301430,
+    "name": "checkout_cta_copy",
+    "type": "MULTIVARIATE",
+    "initial_value": "control",
+    "multivariate_options": [
+      {"id": 36397, "uuid": "68142503-e908-49ef-abe6-ec77265b9b7d", "type": "unicode", "string_value": "get_it_today", "default_percentage_allocation": 0, "key": "get_it_today"},
+      {"id": 36396, "uuid": "cbbf3de7-5b8c-4e76-b1e7-d7477cf53d7f", "type": "unicode", "string_value": "buy_now", "default_percentage_allocation": 0, "key": "buy_now"}
+    ]
+  },
+  "status": "running"
+}

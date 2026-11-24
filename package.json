@@ -6,11 +6,12 @@
     "test": "test"
   },
   "scripts": {
-    "build": "esbuild src/demo-browser.js --bundle --format=esm --outfile=public/demo.js",
+    "build": "esbuild src/demo-browser.js --bundle --format=esm --outfile=public/demo.js && esbuild src/experiment-browser.js --bundle --format=esm --outfile=public/experiment.js",
     "start": "npm run build && node src/server.mjs",
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "capture": "node test/capture-ui.mjs",
-    "setup:flagsmith": "node scripts/setup-flagsmith.mjs"
+    "setup:flagsmith": "node scripts/setup-flagsmith.mjs",
+    "traffic:experiment": "node scripts/run-experiment-traffic.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -19,5 +20,8 @@
     "playwright": "^1.65.1",
     "zod": "^4.6.7"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@flagsmith/nodejs": "^9.5.0"
+  }
 }
