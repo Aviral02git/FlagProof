@@ -89,7 +89,7 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
    const evidence=pathname.match(/^\/artifacts\/([a-f0-9-]+)\/([a-zA-Z0-9.-]+)$/);
    if(evidence&&req.method==='GET'){if(evidence[2].includes('..')||(publicMode&&!sess.runs.has(evidence[1])))return json(res,404,{error:'Run not found'});return serve(res,path.join(artifactRoot,evidence[1],evidence[2]));}
    if(req.method!=='GET')return json(res,404,{error:'Route not found'});
-   const staticFiles={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/demo':'demo.html','/demo.js':'demo.js','/experiment':'experiment.html','/experiment.js':'experiment.js'};
+   const staticFiles={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/demo':'demo.html','/demo.js':'demo.js','/experiment':'experiment.html','/experiment.js':'experiment.js','/experiment/results':'experiment-results.html','/experiment-results.js':'experiment-results.js','/evidence-experiment-399.json':'evidence-experiment-399.json'};
    if(staticFiles[pathname])return serve(res,path.join(ROOT,'public',staticFiles[pathname]));
    return json(res,404,{error:'Not found'});
   }catch(error){return json(res,error.code==='ENOENT'?404:400,{error:error.message.slice(0,1000)});}

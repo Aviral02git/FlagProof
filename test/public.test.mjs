@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp} from 'node:fs/promises';
+import {mkdtemp,readFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
@@ -155,8 +155,12 @@ test('suite completes behind the entry password: the runner uses a run-scoped ti
  const done=(await call('GET',`/api/runs/${runId}`)).data;
  assert.equal(done.status,'completed');
  assert.equal(done.results.filter(r=>r.status==='pass').length,8);
- // The real ticket is dead once the run slot cleared.
- assert.equal((await raw('GET','/api/demo-config',tk)).status,403);
+ // The real ticket is dead once the run slot cleared. The ticket is revoked in the
+ // run's finally, which can land a moment after the status flips to completed, so
+ // allow a short settle window before asserting.
+ let ticketStatus=0;
+ for(let i=0;i<25;i++){ticketStatus=(await raw('GET','/api/demo-config',tk)).status;if(ticketStatus===403)break;await new Promise(r=>setTimeout(r,200));}
+ assert.equal(ticketStatus,403);
  // Downloadable evidence must not carry the visitor session credential. These checks fail closed.
  const report=await (await fetch(base+`/artifacts/${runId}/report.md`,{headers:{cookie}})).text();
  assert.ok(!report.includes(sid));
@@ -167,4 +171,32 @@ test('suite completes behind the entry password: the runner uses a run-scoped ti
  assert.ok(traceText.length>0,'trace zip must decode');
  assert.ok(!traceText.includes(sid),'trace must not contain the visitor session id');
  assert.ok(traceText.includes('fp_run'),'trace carries the run-scoped ticket, dead once the run slot clears');
+});
+
+test('experiment results page serves the recorded synthetic analysis, byte-identical to the evidence fixture',async t=>{
+ const app=await startPublic(t);
+ const html=await (await fetch(app.origin+'/experiment/results')).text();
+ assert.match(html,/FLAGPROOF \/ EXPERIMENT RESULTS/);
+ assert.match(html,/experiment-results\.js/);
+ const js=await (await fetch(app.origin+'/experiment-results.js')).text();
+ assert.match(js,/SAVED SYNTHETIC RESULTS/);
+ assert.match(js,/not a live feed/);
+ assert.match(js,/not established by this record/);
+ assert.match(js,/no calibrated absolute-threshold posterior/);
+ const page=await (await fetch(app.origin+'/experiment/results')).text();
+ assert.match(page,/Delta vs control \(relative\)/);
+ assert.match(page,/95% credible interval \(relative\)/);
+ assert.match(page,/WHAT THIS RECORD ESTABLISHES/);
+ const servedText=await (await fetch(app.origin+'/evidence-experiment-399.json')).text();
+ const fixtureText=await readFile(new URL('./fixtures/run-report-399.json',import.meta.url),'utf8');
+ assert.equal(servedText,fixtureText);
+ const served=JSON.parse(servedText);
+ assert.equal(served.experiment.flagsmithExperimentId,399);
+ assert.equal(served.analysis.variations.length,3);
+ assert.equal(served.analysis.variations[0].key,'control');
+ assert.equal(served.analysis.variations[0].winProbabilityPct,'<1');
+ assert.match(served.label,/synthetic/i);
+ assert.match(served.analysis.note,/pairwise against control/);
+ const shop=await (await fetch(app.origin+'/experiment')).text();
+ assert.match(shop,/\/experiment\/results/);
 });
