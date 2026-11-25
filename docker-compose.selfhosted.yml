@@ -1,0 +1,58 @@
+# Self-hosted Flagsmith for FlagProof (Track 03 path)
+#
+# Starts a full self-hosted Flagsmith (dashboard + REST API + PostgreSQL) next
+# to FlagProof. FlagProof then talks only to http://localhost:8000.
+#
+# Usage:
+#   docker compose -f docker-compose.selfhosted.yml up -d
+#   open http://localhost:8000, create the admin account and organisation
+#   create a project + environment, copy its client-side environment key
+#   FLAGSMITH_API_URL=http://localhost:8000/api/v1/ npm run setup:flagsmith
+#   FLAGPROOF_MODE=flagsmith npm start
+#
+# Experimentation on self-hosted: Environment Settings > Warehouse, choose
+# "Flagsmith database". SDK events then go to http://localhost:8000/api/v1/events/.
+# Set FLAGSMITH_EVENTS_API_URL=http://localhost:8000/api/ for the traffic
+# script: it is the API base URL, and the SDK appends /v1/events itself. The Flagsmith database warehouse is for trying out
+# experimentation, not for production.
+
+services:
+  flagsmith:
+    image: flagsmith/flagsmith:latest
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DISABLE_INFLUXDB_FEATURES: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - flagsmith-pgdata:/var/lib/postgresql/data
+  flagproof:
+    build: .
+    ports:
+      - "4317:4317"
+    environment:
+      FLAGPROOF_MODE: flagsmith
+      # Inside the compose network the Flagsmith service is reached by its
+      # service name, not localhost.
+      FLAGSMITH_API_URL: http://flagsmith:8000/api/v1/
+      FLAGSMITH_EVENTS_API_URL: http://flagsmith:8000/api/
+    depends_on:
+      - flagsmith
+    profiles:
+      - flagproof
+volumes:
+  flagsmith-pgdata:

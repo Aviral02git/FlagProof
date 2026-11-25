@@ -1,0 +1,101 @@
+{
+  "experiment": {
+    "flagsmithExperimentId": 399,
+    "name": "Checkout CTA copy test",
+    "flag": "checkout_cta_copy",
+    "variations": [
+      {
+        "key": "control",
+        "weightPct": 34
+      },
+      {
+        "key": "buy_now",
+        "weightPct": 33
+      },
+      {
+        "key": "get_it_today",
+        "weightPct": 33
+      }
+    ],
+    "metricEvent": "checkout_completed",
+    "metricAggregation": "occurrence",
+    "rolloutPct": 100,
+    "hypothesis": "Changing the checkout CTA copy from \"Checkout\" to \"Buy now\" will increase checkout completion by at least 10 percentage points within the simulated traffic window.",
+    "approvalHash": "00373816e1b22c4ddac23a1c9526fab957436c81c5e280a9fcc58453f260044f"
+  },
+  "trafficRun": {
+    "executedAt": "2026-11-23T23:34:00+05:30",
+    "command": "node scripts/run-experiment-traffic.mjs 450",
+    "identityPrefix": "shopper-sim",
+    "identityCount": 450,
+    "presetConversionRates": {
+      "control": 0.32,
+      "buy_now": 0.46,
+      "get_it_today": 0.38
+    },
+    "sentCounts": {
+      "control": {
+        "exposures": 158,
+        "conversions": 51
+      },
+      "buy_now": {
+        "exposures": 147,
+        "conversions": 68
+      },
+      "get_it_today": {
+        "exposures": 145,
+        "conversions": 69
+      }
+    },
+    "totalEventsSent": 638,
+    "warehouseConfirmation": "Flagsmith warehouse confirmed 638 total events received, read-only check 23 Nov 2026 23:34 IST",
+    "sdkCalls": "getExperimentFlag + trackEvent + flushEvents only",
+    "syntheticData": true
+  },
+  "analysis": {
+    "verifiedAt": "2026-11-24T08:56:00+05:30",
+    "source": "Flagsmith dashboard experiment 399, processed Bayesian analysis",
+    "asOf": "24 Nov 2026, 03:25 UTC",
+    "variations": [
+      {
+        "key": "control",
+        "exposures": 158,
+        "occurrenceRatePct": 32.3,
+        "deltaPct": "Baseline",
+        "credibleInterval95Pct": "Baseline",
+        "winProbabilityPct": "<1"
+      },
+      {
+        "key": "get_it_today",
+        "exposures": 145,
+        "occurrenceRatePct": 47.6,
+        "deltaPct": "+47.4",
+        "credibleInterval95Pct": "[5.5, 89.3]",
+        "winProbabilityPct": 99
+      },
+      {
+        "key": "buy_now",
+        "exposures": 147,
+        "occurrenceRatePct": 46.3,
+        "deltaPct": "+43.3",
+        "credibleInterval95Pct": "[2.3, 84.3]",
+        "winProbabilityPct": 98
+      }
+    ],
+    "note": "Win probability is pairwise against control, not a ranking across variations."
+  },
+  "reproducibility": {
+    "wholePoolRealizedRates": {
+      "control": 0.329,
+      "buy_now": 0.458,
+      "get_it_today": 0.422
+    },
+    "explanation": "Conversion outcomes are a deterministic SHA-256 hash draw per identity and variation key against the preset rate (src/experiment.mjs identityConverts). The get_it_today key drew hot: 42.2% across all 450 identities at a 0.38 preset, and 47.6% within the 145 identities Flagsmith bucketed into that variation."
+  },
+  "screenshots": [
+    "flagsmith-analysis-2026-11-24.png",
+    "flagsmith-exposures-2026-11-24.png",
+    "experiment-shop-page-2026-11-25.png"
+  ],
+  "label": "All visitor data is synthetic demo traffic. It demonstrates the Flagsmith Experimentation pipeline end to end. It is not evidence that any CTA copy performs better with real customers."
+}
