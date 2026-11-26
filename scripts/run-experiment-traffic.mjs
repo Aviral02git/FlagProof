@@ -17,10 +17,6 @@ import {runExperimentTraffic,EXPERIMENT_FLAG,EXPERIMENT_EVENT,EXPERIMENT_VARIANT
 // The A/A plumbing check uses: --flag <aa flag> --variants twin_a:twin_b
 // --rates 0.4:0.4 --prefix aa-sim, with identical preset rates on both arms.
 
-await loadDotEnv();
-const environment=process.env.FLAGSMITH_ENVIRONMENT_KEY;
-if(!environment){console.log('FLAGSMITH_ENVIRONMENT_KEY missing. Run npm run setup:flagsmith first.');process.exitCode=1;process.exit();}
-
 const args=process.argv.slice(2);
 const positional=args.filter(a=>!a.startsWith('--'));
 const option=name=>{const i=args.indexOf(name);return i===-1?undefined:args[i+1];};
@@ -35,6 +31,10 @@ const variants=variantKeys.map(key=>({key}));
 const rates=Object.fromEntries(variantKeys.map((k,i)=>[k,ratesList[i]]));
 const prefix=option('--prefix')||'shopper-sim';
 const total=Math.max(variantKeys.length*50,Number(positional[0]||450));
+
+await loadDotEnv();
+const environment=process.env.FLAGSMITH_ENVIRONMENT_KEY;
+if(!environment){console.log('FLAGSMITH_ENVIRONMENT_KEY missing. Run npm run setup:flagsmith first.');process.exitCode=1;process.exit();}
 
 // Self-hosted Flagsmith: set FLAGSMITH_API_URL (ends /api/v1/) and
 // FLAGSMITH_EVENTS_API_URL (e.g. http://localhost:8000/api/ when the

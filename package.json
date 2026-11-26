@@ -1,7 +1,7 @@
 {
   "name": "flagproof-pre-event-prototype",
   "version": "0.1.0",
-  "description": "Private pre-event FlagProof prototype: reviewed bounded plans and browser evidence across eight flag configurations",
+  "description": "Hash-approved plans and browser evidence across eight flag configurations, with a recorded Flagsmith Experimentation run",
   "directories": {
     "test": "test"
   },
