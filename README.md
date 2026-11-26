@@ -8,6 +8,26 @@ Built for the Flagsmith Experimentation Hackathon (Toggle Wars), targeting the "
 
 **Live demo:** <https://flagproof.onrender.com> runs the locked fixture-only public demo (no Flagsmith account needed). The recorded experiment analysis is at <https://flagproof.onrender.com/experiment/results>.
 
+## The experiment (Track 01 entry)
+
+Track 01 ("Test Something Real") asks for one experiment done well: a clear hypothesis, versions behind a flag, a metric from real events, and results you can explain. FlagProof's entry is a single checkout CTA experiment run once on real Flagsmith infrastructure with synthetic visitors, labelled synthetic everywhere it appears.
+
+The hypothesis, fixed and hash-approved before any traffic ran:
+
+> Changing the checkout CTA copy from "Checkout" to "Buy now" will increase checkout completion by at least 10 percentage points within the simulated traffic window.
+
+- **Versions behind a flag.** `checkout_cta_copy`, a multivariate flag with three keyed variations created before any traffic: `control` 34%, `buy_now` 33%, `get_it_today` 33%. A bundled checkout page resolves the flag through the Flagsmith browser SDK and shows each visitor their variation, exactly as a real storefront experiment would.
+- **A metric from real events.** Each visitor records an exposure through the SDK (`getExperimentFlag`) and a `checkout_completed` event at the moment of conversion (`trackEvent`), matched to a Flagsmith "Checkout completion rate" metric. Flagsmith's managed warehouse confirmed 638 events from the run: 450 exposures and 188 conversions.
+- **Results you can explain.** Flagsmith's processed Bayesian analysis is quoted below with its credible intervals, and `node scripts/read-experiment-result.mjs test/fixtures/run-report-399.json` (the record path is required; the committed fixture is a byte-identical copy of the recorded run report) re-derives the decision read offline from the recorded run: whether each credible interval clears zero, whether the hypothesis's absolute threshold is established, the preset-versus-realized comparison, and the four wiring-validity checks. Threshold support reports **unknown** unless actual absolute-effect posterior evidence is recorded: multiplying a relative credible bound by the observed baseline is illustrative arithmetic, not a calibrated absolute-lift bound, and is labelled as such. Validity checks report **unknown** where the record does not contain the evidence; a documented checklist is not treated as machine-verified proof, and zero observed conversions reads as unknown (a valid possible outcome), not as broken tracking. No network calls.
+
+On 23 Nov 2026 a single fixed 450-visitor synthetic run was executed, and Flagsmith's processed Bayesian analysis was verified on 24 Nov 2026. Control: 158 exposures at 32.3%. get_it_today: 145 at 47.6% (+47.4% delta, 95% credible interval [5.5%, 89.3%], 99% win probability). buy_now: 147 at 46.3% (+43.3%, [2.3%, 84.3%], 98%). Win probability is pairwise against control, not a ranking. Both intervals clear zero, so under Flagsmith's model both variations show a positive relative lift over control on this synthetic data; the absolute 10-point threshold in the hypothesis is not established by the reported intervals, and no direct challenger-vs-challenger comparison was established. These numbers demonstrate Flagsmith's analysis pipeline end to end on synthetic data; they say nothing about real users. The hosted demo also serves this recorded analysis at /experiment/results: a saved-results page that renders the repo's evidence record (byte-identical to the run report), labels deltas and intervals as relative, states that the absolute threshold stays unknown on this record, and never contacts Flagsmith.
+
+![Flagsmith dashboard Bayesian analysis for the recorded run, verified 24 Nov 2026](evidence/experiment-399/flagsmith-analysis-2026-11-24.png)
+
+The traffic CLI: `node scripts/run-experiment-traffic.mjs 450` drives synthetic visitors through the flag via the server-side Flagsmith Node SDK. Visitor identity is a deterministic hash, so the split is stable per visitor. Conversion outcomes come from preset per-variation probabilities: they are demo fixtures, not evidence that any CTA copy works better. The CLI also accepts `--flag`, `--event`, `--variants`, `--rates` and `--prefix` for validation runs such as an A/A plumbing check; these options are covered by tests against a local stub of the Flagsmith APIs. The bundled browser page shows the same getExperimentFlag and trackEvent path to an interactive visitor: fixture mode in the public demo, live SDK mode when connected to your own environment.
+
+The full write-up, including the four validity checks, preset-versus-realized rates and limitations, is in [EXPERIMENT-RESULTS.md](EXPERIMENT-RESULTS.md), with the dashboard screenshots and run record in [evidence/experiment-399/](evidence/experiment-399/). The experiment page is labelled synthetic in the UI.
+
 ## How it uses Flagsmith
 
 - **Management API**: writes each of the eight flag configurations to your environment, one at a time, through the official REST API.
@@ -65,26 +85,6 @@ Local private use is unchanged.
 ## Offline mode
 
 Without `.env`, the app runs against a bundled local fixture adapter (clearly labelled LOCAL FIXTURE in the UI). Useful for trying the flow without a Flagsmith account; the Flagsmith-backed mode above is the primary path.
-
-## The experiment (Track 01 entry)
-
-Track 01 ("Test Something Real") asks for one experiment done well: a clear hypothesis, versions behind a flag, a metric from real events, and results you can explain. FlagProof's entry is a single checkout CTA experiment run once on real Flagsmith infrastructure with synthetic visitors, labelled synthetic everywhere it appears.
-
-The hypothesis, fixed and hash-approved before any traffic ran:
-
-> Changing the checkout CTA copy from "Checkout" to "Buy now" will increase checkout completion by at least 10 percentage points within the simulated traffic window.
-
-- **Versions behind a flag.** `checkout_cta_copy`, a multivariate flag with three keyed variations created before any traffic: `control` 34%, `buy_now` 33%, `get_it_today` 33%. A bundled checkout page resolves the flag through the Flagsmith browser SDK and shows each visitor their variation, exactly as a real storefront experiment would.
-- **A metric from real events.** Each visitor records an exposure through the SDK (`getExperimentFlag`) and a `checkout_completed` event at the moment of conversion (`trackEvent`), matched to a Flagsmith "Checkout completion rate" metric. Flagsmith's managed warehouse confirmed 638 events from the run: 450 exposures and 188 conversions.
-- **Results you can explain.** Flagsmith's processed Bayesian analysis is quoted below with its credible intervals, and `node scripts/read-experiment-result.mjs test/fixtures/run-report-399.json` (the record path is required; the committed fixture is a byte-identical copy of the recorded run report) re-derives the decision read offline from the recorded run: whether each credible interval clears zero, whether the hypothesis's absolute threshold is established, the preset-versus-realized comparison, and the four wiring-validity checks. Threshold support reports **unknown** unless actual absolute-effect posterior evidence is recorded: multiplying a relative credible bound by the observed baseline is illustrative arithmetic, not a calibrated absolute-lift bound, and is labelled as such. Validity checks report **unknown** where the record does not contain the evidence; a documented checklist is not treated as machine-verified proof, and zero observed conversions reads as unknown (a valid possible outcome), not as broken tracking. No network calls.
-
-On 23 Nov 2026 a single fixed 450-visitor synthetic run was executed, and Flagsmith's processed Bayesian analysis was verified on 24 Nov 2026. Control: 158 exposures at 32.3%. get_it_today: 145 at 47.6% (+47.4% delta, 95% credible interval [5.5%, 89.3%], 99% win probability). buy_now: 147 at 46.3% (+43.3%, [2.3%, 84.3%], 98%). Win probability is pairwise against control, not a ranking. Both intervals clear zero, so under Flagsmith's model both variations show a positive relative lift over control on this synthetic data; the absolute 10-point threshold in the hypothesis is not established by the reported intervals, and no direct challenger-vs-challenger comparison was established. These numbers demonstrate Flagsmith's analysis pipeline end to end on synthetic data; they say nothing about real users. The hosted demo also serves this recorded analysis at /experiment/results: a saved-results page that renders the repo's evidence record (byte-identical to the run report), labels deltas and intervals as relative, states that the absolute threshold stays unknown on this record, and never contacts Flagsmith.
-
-![Flagsmith dashboard Bayesian analysis for the recorded run, verified 24 Nov 2026](evidence/experiment-399/flagsmith-analysis-2026-11-24.png)
-
-The traffic CLI: `node scripts/run-experiment-traffic.mjs 450` drives synthetic visitors through the flag. Visitor identity is a deterministic hash, so the split is stable per visitor. Conversion outcomes come from preset per-variation probabilities: they are demo fixtures, not evidence that any CTA copy works better. The CLI also accepts `--flag`, `--event`, `--variants`, `--rates` and `--prefix` for validation runs such as an A/A plumbing check; these options are covered by tests against a local stub of the Flagsmith APIs.
-
-The full write-up, including the four validity checks, preset-versus-realized rates and limitations, is in [EXPERIMENT-RESULTS.md](EXPERIMENT-RESULTS.md), with the dashboard screenshots and run record in [evidence/experiment-399/](evidence/experiment-399/). The experiment page is labelled synthetic in the UI.
 
 ## Agent experiment proposals
 
