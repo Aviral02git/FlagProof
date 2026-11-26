@@ -4,8 +4,7 @@
 
 A flag can pass every individual test and still break a checkout when combined with another flag. FlagProof connects to a real Flagsmith environment through the management API and browser SDK, exercises every on/off combination of your flags in a real browser against an independent price contract, and shows the smallest observed failing set with screenshots, Playwright traces and a JSON report. Every run requires a human to review and approve a hash-bound plan first; original flag state is recorded and restored with read-back verification.
 
-Built for the Flagsmith Experimentation Hackathon (Toggle Wars), targeting the "Test Something Real" track: a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure, plus an agent harness that drives Flagsmith with a human approving every change. AI assistance helped build this project; the capability table below states what is verified and what is not.
-
+Built for the Flagsmith Experimentation Hackathon (Toggle Wars), targeting the "Test Something Real" track: a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure, plus an agent harness that drives Flagsmith with a human approving every change. 
 **Live demo:** <https://flagproof.onrender.com> runs the locked fixture-only public demo (no Flagsmith account needed). The recorded experiment analysis is at <https://flagproof.onrender.com/experiment/results>.
 
 ## The experiment (Track 01 entry)
