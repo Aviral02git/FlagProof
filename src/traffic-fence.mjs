@@ -5,8 +5,10 @@ export function attachTrafficFence(child,verify,{onStop=()=>{},verifyTimeoutMs=2
  child.on('message',async m=>{
   if(!m||m.t!=='next'||stopped)return;
   let go=false;try{go=Boolean(await Promise.race([verify(),new Promise((_,rej)=>{const t=setTimeout(()=>rej(new Error('verify timeout')),verifyTimeoutMs);t.unref?.();})]));}catch{go=false;}
-  if(!go){stopped=true;try{child.send({go:false});}catch{}child.kill();onStop();return;}
-  try{child.send({go:true});}catch{}
+  const send=msg=>{try{child.send(msg,()=>{});}catch{}};// the callback swallows a late 'channel closed' error from lanes still waiting after a stop
+  if(stopped){send({go:false,id:m.id});return;}// another lane already failed: nothing more is granted
+  if(!go){stopped=true;send({go:false,id:m.id});child.kill();onStop();return;}
+  send({go:true,id:m.id});
  });
  return {get stopped(){return stopped;}};
 }
