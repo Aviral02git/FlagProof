@@ -1,0 +1,137 @@
+{
+  "host": "http://127.0.0.1:8000",
+  "experimentId": 1,
+  "exec": {
+    "executedAt": "2026-11-27T06:47:21.056Z",
+    "approvedHash": "00373816e1b22c4ddac23a1c9526fab957436c81c5e280a9fcc58453f260044f",
+    "proposal": {
+      "kind": "experiment-proposal",
+      "name": "Checkout CTA copy test",
+      "hypothesis": "Changing the checkout CTA copy from \"Checkout\" to \"Buy now\" will increase checkout completion by at least 10 percentage points within the simulated traffic window.",
+      "flag": "checkout_cta_copy",
+      "variations": [
+        {
+          "key": "control",
+          "weightPct": 34
+        },
+        {
+          "key": "buy_now",
+          "weightPct": 33
+        },
+        {
+          "key": "get_it_today",
+          "weightPct": 33
+        }
+      ],
+      "metricEvent": "checkout_completed",
+      "metricAggregation": "occurrence",
+      "rolloutPct": 100,
+      "syntheticDataNotice": true
+    },
+    "mode": "flagsmith-api",
+    "metricReused": false,
+    "featureId": 4,
+    "metricId": 1,
+    "experimentId": 1,
+    "started": true,
+    "note": "Live Flagsmith execution of the approved proposal. Results still reflect whatever traffic the environment actually receives; synthetic traffic stays labelled synthetic."
+  },
+  "refresh": "",
+  "exposures": {
+    "exposures": {
+      "as_of": "2026-11-27T06:47:43.835633Z",
+      "last_error_at": null,
+      "refresh_requested_at": "2026-11-27T06:47:43.830250Z",
+      "payload": {
+        "timeseries": {
+          "points": [
+            {
+              "bucket": "2026-11-27T06:00:00+00:00",
+              "new_identities": {
+                "buy_now": 147,
+                "control": 164,
+                "get_it_today": 139
+              }
+            }
+          ],
+          "granularity": "hour"
+        },
+        "excluded_identities": 0
+      },
+      "is_final": false
+    }
+  },
+  "results": {
+    "results": {
+      "as_of": "2026-11-27T06:47:44.045401Z",
+      "last_error_at": null,
+      "refresh_requested_at": "2026-11-27T06:47:44.041345Z",
+      "payload": {
+        "metrics": [
+          {
+            "variants": {
+              "buy_now": {
+                "n": 147,
+                "sum": 74,
+                "sum_squares": 74
+              },
+              "control": {
+                "n": 164,
+                "sum": 50,
+                "sum_squares": 50
+              },
+              "get_it_today": {
+                "n": 139,
+                "sum": 62,
+                "sum_squares": 62
+              }
+            },
+            "inference": {
+              "buy_now": {
+                "lift": 0.651156462585034,
+                "ci_low": 0.18504727067472054,
+                "ci_high": 1.1172656544953474,
+                "chance_to_win": 0.9969100269707485
+              },
+              "get_it_today": {
+                "lift": 0.463021582733813,
+                "ci_low": 0.02826871830876232,
+                "ci_high": 0.8977744471588637,
+                "chance_to_win": 0.9815742633831188
+              }
+            },
+            "metric_id": 1,
+            "conversions_timeseries": {
+              "points": [
+                {
+                  "bucket": "2026-11-27T06:00:00+00:00",
+                  "converted_identities": {
+                    "buy_now": 74,
+                    "control": 50,
+                    "get_it_today": 62
+                  }
+                }
+              ],
+              "granularity": "hour"
+            }
+          }
+        ],
+        "srm_p_value": null,
+        "exposures_timeseries": {
+          "points": [
+            {
+              "bucket": "2026-11-27T06:00:00+00:00",
+              "new_identities": {
+                "buy_now": 147,
+                "control": 164,
+                "get_it_today": 139
+              }
+            }
+          ],
+          "granularity": "hour"
+        }
+      },
+      "is_final": false
+    }
+  }
+}

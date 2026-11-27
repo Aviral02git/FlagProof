@@ -91,13 +91,29 @@ Without `.env`, the app runs against a bundled local fixture adapter (clearly la
 
 ## Self-hosted Flagsmith
 
-`docker-compose.selfhosted.yml` is intended to run Flagsmith and Postgres locally alongside FlagProof, so the whole flow can run without a Flagsmith Cloud account:
+You can run FlagProof against the open-source Flagsmith API on your own machine, without Docker and without a Flagsmith Cloud account. This is a local test setup with throwaway secrets, not a production deployment.
+
+Requirements: Linux x86_64, Node.js 22 or later, npm, Chromium (`npx playwright install chromium`), and git, curl, unzip, xz, [uv](https://docs.astral.sh/uv/) and the `psql` client. uv downloads Python 3.12 for Flagsmith by itself. Run every command from the root of this repository.
+
+Terminal 1. Set up once (about 80 seconds), then start Flagsmith. `serve` keeps running, so leave this terminal open:
 
 ```sh
-docker compose -f docker-compose.selfhosted.yml --profile flagproof up
+selfhosted/from-source.sh prepare
+selfhosted/from-source.sh serve
 ```
 
-Requires Docker with Compose v2. This file is written but not yet runtime-verified at any level. A first `docker compose up` would only verify level 1, that the services boot and become reachable. Calling the self-hosted path "tested" additionally needs level 2 (the FlagProof app passing its checks against the self-hosted Flagsmith) and level 3 (the experiment flow running against it). None of the three levels has been run yet.
+Terminal 2. Create the organisation, project, environment and the three flags, then start FlagProof:
+
+```sh
+npm ci
+export FLAGSMITH_API_URL=http://127.0.0.1:8000/api/v1/
+node scripts/bootstrap-selfhosted.mjs .env
+npm start
+```
+
+The dashboard shows **SELF-HOSTED FLAGSMITH API + SDK**. To run the checks without the dashboard, use `node scripts/verify-selfhosted.mjs .env` (configuration matrix) and `node scripts/verify-selfhosted-experiment.mjs .env` (experiment with synthetic visitors). For the optional local planner, start Ollama, pull a model, and set `FLAGPROOF_PLANNER=ollama OLLAMA_MODEL=<model>` before the experiment script. Optionally set `FLAGPROOF_REQUEST="<up to 300 characters>"` to pass a plain-language request.
+
+Checked on 27 Nov 2026 from an empty directory: the matrix ran 8 configurations plus one reproduction run, 9 cases in all: 6 passed and 3 failed (the seeded defect), with flags restored and read back. The experiment was created and started, synthetic visitors were sent, and Flagsmith's own analysis returned. Numbers from a self-hosted run differ from the Cloud run and are never combined with it. `docker-compose.selfhosted.yml` is written but has not been run.
 
 ## What is working, and what is not
 
@@ -119,7 +135,9 @@ Requires Docker with Compose v2. This file is written but not yet runtime-verifi
 | Live experiment creation adapter (management REST; create-only unless separately confirmed) | Tested against stubbed API responses, and exercised once against a real organisation 24 Nov 2026 (temporary flag and stopped experiment created, read back, cleaned up; read-back correction validated offline, one live retest pending) |
 | Self-hosted Flagsmith compose file | Written, not runtime-verified at any level (boot, integration and experiment checks all outstanding) |
 | Responsive dashboard at 320, 390, 1280 and 1440 px | Checked in Chromium |
-| AI-generated plan using a local Ollama model | **Verified with qwen2.5:0.5b on 20 Nov 2026 across both bundled fixtures** (schema-checked plans, scenario guard, explicit failure, no silent fallback). Other models untested; review stays mandatory. |
+| Optional local-model planner (plan and experiment proposal) | Recorded runs with qwen2.5:0.5b on 20 Nov 2026, and runs on 27 Nov 2026 with qwen2.5:0.5b and qwen2.5:1.5b. Output is schema-checked with hard limits: variation keys fixed, traffic split adds to 100, rollout at least 1, no URLs or commands in text. A valid proposal, including one identical to the template, goes to review and runs only after its exact hash is approved. An invalid proposal is rejected with "Nothing will run". There is no silent fallback. Small models often return the template unchanged or an invalid shape. |
+| Optional plain-language request to the planner (up to 300 characters) | Working, with limits. The request is passed to the model as data. On 27 Nov 2026 qwen2.5:1.5b answered "only expose half" with a 50% rollout (a reviewable proposal with its hash). qwen2.5:0.5b ignored requests or returned invalid output. Covered by mocked unit tests. |
+| Planner proposal, hash approval and execution on self-hosted Flagsmith | Run on 27 Nov 2026 against the open-source Flagsmith API on localhost with synthetic visitors. The 1.5b proposal (rollout 50%) was executed after its hash was supplied by the verification script, not typed by a person. The experiment was created and started, and Flagsmith's own analysis counted 143 of 300 visitors as enrolled. That is too few visitors for intervals, so no winner is claimed. The interactive prompt in `scripts/propose-experiment.mjs` was also run on 27 Nov 2026 against the local fixture with piped input: a wrong hash cancelled with "Nothing executed" and the exact hash was accepted. |
 | AI-authored result explanation | **Not implemented**. The summary is deterministic. |
 | Hosted public demo mode (locked fixture-only serving, per-visitor isolated sessions, per-IP rate limits with daily cap, expiring artifacts, optional entry password) | Implemented and covered by automated tests; deployed on Render and verified live 25 Nov 2026; a demo, not production infrastructure |
 | Production app targeting and CI | **Not implemented** |

@@ -4,6 +4,7 @@ import {mkdtemp,readFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
+import {startServer} from '../src/server.mjs';
 
 async function freePort(){const s=net.createServer();await new Promise(r=>s.listen(0,r));const p=s.address().port;await new Promise(r=>s.close(r));return p;}
 
@@ -199,4 +200,10 @@ test('experiment results page serves the recorded synthetic analysis, byte-ident
  assert.match(served.analysis.note,/pairwise against control/);
  const shop=await (await fetch(app.origin+'/experiment')).text();
  assert.match(shop,/\/experiment\/results/);
+});
+test('home page links to the recorded experiment results page',async t=>{
+ const app=await startServer({port:0,artifactRoot:await mkdtemp(path.join(os.tmpdir(),'flagproof-'))});t.after(()=>app.close());
+ const html=await (await fetch(app.origin+'/')).text();
+ assert.match(html,/href="\/experiment\/results"/);
+ assert.equal((await fetch(app.origin+'/experiment/results')).status,200);
 });

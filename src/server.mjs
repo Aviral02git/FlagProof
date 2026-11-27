@@ -1,3 +1,4 @@
+import {flagsmithHosts} from './hosts.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir,stat} from 'node:fs/promises';
 import path from 'node:path';
@@ -26,7 +27,7 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
  const server=createServer(async(req,res)=>{
   try{
    if(req.headers.host!==new URL(origin).host)return json(res,403,{error:'Untrusted Host'});
-   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://edge.api.flagsmith.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+   res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ${flagsmithHosts().origin}; frame-ancestors 'none'; base-uri 'none'; form-action 'self'`);
    const url=new URL(req.url,origin),pathname=url.pathname;
    if(!['GET','POST'].includes(req.method))return json(res,405,{error:'Method not allowed'});
    let sess=null;

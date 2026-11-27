@@ -1,13 +1,13 @@
 import {FLAG_NAMES} from './core.mjs';
+import {flagsmithHosts} from './hosts.mjs';
 
 // Verification logic for a real Flagsmith environment, separated from the
 // interactive setup wrapper so tests can inject fetch and a target directory.
 // Throws Error with a user-readable message on any check failure.
 
-const EDGE='https://edge.api.flagsmith.com/api/v1/flags/';
-const ADMIN='https://api.flagsmith.com/api/__future__/environments';
 
-export async function verifyFlagsmithEnvironment({environment,management,fetchFn=fetch}){
+export async function verifyFlagsmithEnvironment({environment,management,fetchFn=fetch,env=process.env}){
+ const {flagsUrl:EDGE,environmentsUrl:ADMIN}=flagsmithHosts(env);
  if(!environment||!management)throw new Error('Both keys are required.');
  let featureIds={};
  let res;

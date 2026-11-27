@@ -9,16 +9,20 @@ import {executeExperimentProposalApi} from '../src/experiment-execute.mjs';
 // a reviewable artifact. Nothing executes until a human approves the exact
 // proposal hash. Default execution is the local fixture; creating the real
 // experiment in a Flagsmith org is a separate, separately approved step.
-// Usage: node scripts/propose-experiment.mjs [--live]
+// Usage: node scripts/propose-experiment.mjs [--request "plain-language request"] [--live]
+// --request needs the local planner (FLAGPROOF_PLANNER=ollama, OLLAMA_MODEL). The model output is checked against hard limits first.
 // --live: after fixture execution, offer real creation in the Flagsmith
 // environment. That path needs a second explicit typed confirmation and the
 // management key in .env; it is never the default.
 
 const rl=createInterface({input:stdin,output:stdout});
 async function main(){
- const record=await generateExperimentProposal();
+ const reqIdx=process.argv.indexOf('--request');
+ const record=await generateExperimentProposal(process.env,{request:reqIdx>0?process.argv[reqIdx+1]:''});
  console.log(`Proposed experiment (${record.source}):\n`);
  console.log(JSON.stringify(record.proposal,null,2));
+ if(record.requestText)console.log(`\nRequest given to the model (as data): ${JSON.stringify(record.requestText)}`);
+ if(record.changedFromTemplate)console.log(`Changed from the fixed template by the model: ${record.changedFromTemplate.length?record.changedFromTemplate.join(', '):'nothing'}`);
  console.log(`\nApproval hash: ${record.hash}`);
  const answer=(await rl.question('\nApprove and execute this exact proposal against the local fixture? Type the approval hash to confirm, anything else cancels: ')).trim();
  if(answer!==record.hash){console.log('Not approved. Nothing executed.');return;}

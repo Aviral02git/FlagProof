@@ -1,5 +1,6 @@
 import {FlagState,FLAG_NAMES} from './core.mjs';
 import {setTimeout as delay} from 'node:timers/promises';
+import {flagsmithHosts} from './hosts.mjs';
 export class LocalFixtureAdapter {
  constructor(){this.mode='local-fixture';this.label='LOCAL FIXTURE · not Flagsmith';this.state=Object.fromEntries(FLAG_NAMES.map(n=>[n,false]));}
  async read(){return {...this.state};}
@@ -12,14 +13,15 @@ export class LocalFixtureAdapter {
 export class FlagsmithAdapter {
  constructor(env=process.env){
   if(env.FLAGPROOF_ALLOW_LIVE!=='I_APPROVE_ISOLATED_DEMO_WRITES')throw new Error('Live writes require explicit isolated-demo opt-in. Read README first.');
-  this.mode='flagsmith';this.label='FLAGSMITH API + SDK · isolated demo';
+  this.env=env;this.mode='flagsmith';this.label=this.hosts.selfHosted?'SELF-HOSTED FLAGSMITH API + SDK · isolated demo':'FLAGSMITH API + SDK · isolated demo';
   this.key=env.FLAGSMITH_MANAGEMENT_KEY;this.environment=env.FLAGSMITH_ENVIRONMENT_KEY;
   try{this.ids=JSON.parse(env.FLAGSMITH_FEATURE_IDS||'{}');}catch{throw new Error('Invalid feature ID configuration');}
   if(!this.key||!this.environment||!FLAG_NAMES.every(n=>Number.isInteger(this.ids[n])&&this.ids[n]>0))throw new Error('Flagsmith keys or feature IDs missing. Never put management keys in the browser.');
  }
- publicConfig(){return {mode:this.mode,label:this.label,environmentID:this.environment,api:process.env.FLAGSMITH_API_URL||'https://edge.api.flagsmith.com/api/v1/'};}
+ get hosts(){return flagsmithHosts({FLAGSMITH_API_URL:this.env.FLAGSMITH_API_URL??process.env.FLAGSMITH_API_URL});}
+ publicConfig(){return {mode:this.mode,label:this.label,environmentID:this.environment,api:this.hosts.sdkApi,selfHosted:this.hosts.selfHosted};}
  async request(name,method='GET',enabled){
-  const url=`https://api.flagsmith.com/api/__future__/environments/${encodeURIComponent(this.environment)}/features/${this.ids[name]}/`;
+  const url=`${this.hosts.environmentsUrl}/${encodeURIComponent(this.environment)}/features/${this.ids[name]}/`;
   const response=await fetch(url,{method,headers:{Authorization:`Api-Key ${this.key}`,'Content-Type':'application/json'},body:method==='PATCH'?JSON.stringify({environment_default:{enabled}}):undefined,signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw new Error(`Flagsmith ${method} failed (${response.status}); inspect account configuration separately.`);
   const data=await response.json();

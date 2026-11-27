@@ -1,0 +1,351 @@
+{
+ "summary": {
+  "mode": "flagsmith",
+  "status": "completed",
+  "cleanup": {
+   "status": "verified",
+   "flags": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": false
+   }
+  },
+  "pass": 6,
+  "fail": 3,
+  "total": 9,
+  "startedAt": "2026-11-27T06:45:15.377Z",
+  "finishedAt": "2026-11-27T06:46:01.094Z",
+  "flagsmithHost": "http://127.0.0.1:8000"
+ },
+ "originalFlags": {
+  "new_checkout": false,
+  "express_shipping": false,
+  "promo_banner": false
+ },
+ "results": [
+  {
+   "id": "case-01-765b84",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": false
+   },
+   "resolved": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": false
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:17.570Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 105,
+     "observed": 105
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-01-765b84.png",
+    "trace": "case-01-765b84.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:22.087Z"
+  },
+  {
+   "id": "case-02-0c014b",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": true,
+    "express_shipping": false,
+    "promo_banner": false
+   },
+   "resolved": {
+    "new_checkout": true,
+    "express_shipping": false,
+    "promo_banner": false
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:22.089Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 105,
+     "observed": 105
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-02-0c014b.png",
+    "trace": "case-02-0c014b.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:26.462Z"
+  },
+  {
+   "id": "case-03-271d02",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": false,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "resolved": {
+    "new_checkout": false,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:26.464Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 115,
+     "observed": 115
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-03-271d02.png",
+    "trace": "case-03-271d02.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:31.295Z"
+  },
+  {
+   "id": "case-04-a47ce5",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "resolved": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "setup": "valid",
+   "status": "fail",
+   "startedAt": "2026-11-27T06:45:31.297Z",
+   "errors": [
+    "Demo checkout charged shipping twice.",
+    "Price contract violated: expected $115, observed $130."
+   ],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": false,
+     "expected": 115,
+     "observed": 130
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-04-a47ce5.png",
+    "trace": "case-04-a47ce5.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:35.741Z"
+  },
+  {
+   "id": "case-05-4a1f8e",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": true
+   },
+   "resolved": {
+    "new_checkout": false,
+    "express_shipping": false,
+    "promo_banner": true
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:35.742Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 105,
+     "observed": 105
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-05-4a1f8e.png",
+    "trace": "case-05-4a1f8e.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:40.115Z"
+  },
+  {
+   "id": "case-06-2a3f59",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": true,
+    "express_shipping": false,
+    "promo_banner": true
+   },
+   "resolved": {
+    "new_checkout": true,
+    "express_shipping": false,
+    "promo_banner": true
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:40.116Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 105,
+     "observed": 105
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-06-2a3f59.png",
+    "trace": "case-06-2a3f59.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:44.592Z"
+  },
+  {
+   "id": "case-07-9ca296",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": false,
+    "express_shipping": true,
+    "promo_banner": true
+   },
+   "resolved": {
+    "new_checkout": false,
+    "express_shipping": true,
+    "promo_banner": true
+   },
+   "setup": "valid",
+   "status": "pass",
+   "startedAt": "2026-11-27T06:45:44.594Z",
+   "errors": [],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": true,
+     "expected": 115,
+     "observed": 115
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-07-9ca296.png",
+    "trace": "case-07-9ca296.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:49.136Z"
+  },
+  {
+   "id": "case-08-2ac657",
+   "label": "matrix",
+   "flags": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": true
+   },
+   "resolved": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": true
+   },
+   "setup": "valid",
+   "status": "fail",
+   "startedAt": "2026-11-27T06:45:49.137Z",
+   "errors": [
+    "Demo checkout charged shipping twice.",
+    "Price contract violated: expected $115, observed $130."
+   ],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": false,
+     "expected": 115,
+     "observed": 130
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-08-2ac657.png",
+    "trace": "case-08-2ac657.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:53.498Z"
+  },
+  {
+   "id": "case-09-e93e0c",
+   "label": "reproduce",
+   "flags": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "resolved": {
+    "new_checkout": true,
+    "express_shipping": true,
+    "promo_banner": false
+   },
+   "setup": "valid",
+   "status": "fail",
+   "startedAt": "2026-11-27T06:45:53.499Z",
+   "errors": [
+    "Demo checkout charged shipping twice.",
+    "Price contract violated: expected $115, observed $130."
+   ],
+   "assertions": [
+    {
+     "name": "order-confirmed",
+     "pass": true
+    },
+    {
+     "name": "correct-total",
+     "pass": false,
+     "expected": 115,
+     "observed": 130
+    }
+   ],
+   "artifacts": {
+    "screenshot": "case-09-e93e0c.png",
+    "trace": "case-09-e93e0c.zip"
+   },
+   "finishedAt": "2026-11-27T06:45:57.789Z"
+  }
+ ]
+}

@@ -1,0 +1,128 @@
+{
+ "host": "http://127.0.0.1:8000",
+ "experimentId": 3,
+ "exec": {
+  "executedAt": "2026-11-27T11:29:16.044Z",
+  "approvedHash": "3539e7fae8d165b41c99e734a029415b7e2680d7d71678d3e486d18bb75cfb5b",
+  "proposal": {
+   "kind": "experiment-proposal",
+   "name": "Checkout CTA copy test",
+   "hypothesis": "Changing the checkout CTA copy from \"Checkout\" to \"Buy now\" will increase checkout completion by at least 10 percentage points within the simulated traffic window.",
+   "flag": "checkout_cta_copy",
+   "variations": [
+    {
+     "key": "control",
+     "weightPct": 34
+    },
+    {
+     "key": "buy_now",
+     "weightPct": 33
+    },
+    {
+     "key": "get_it_today",
+     "weightPct": 33
+    }
+   ],
+   "metricEvent": "checkout_completed",
+   "metricAggregation": "occurrence",
+   "rolloutPct": 50,
+   "syntheticDataNotice": true
+  },
+  "mode": "flagsmith-api",
+  "metricReused": true,
+  "projectId": 1,
+  "featureId": 4,
+  "metricId": 1,
+  "experimentId": 3,
+  "started": true,
+  "note": "Live Flagsmith execution of the approved proposal. Results still reflect whatever traffic the environment actually receives; synthetic traffic stays labelled synthetic."
+ },
+ "refresh": "",
+ "exposures": {
+  "exposures": {
+   "as_of": "2026-11-27T11:29:31.809794Z",
+   "last_error_at": null,
+   "refresh_requested_at": "2026-11-27T11:29:31.805883Z",
+   "payload": {
+    "timeseries": {
+     "points": [
+      {
+       "bucket": "2026-11-27T11:00:00+00:00",
+       "new_identities": {
+        "buy_now": 57,
+        "control": 44,
+        "get_it_today": 42
+       }
+      }
+     ],
+     "granularity": "hour"
+    },
+    "excluded_identities": 0
+   },
+   "is_final": false
+  }
+ },
+ "results": {
+  "results": {
+   "as_of": "2026-11-27T11:29:32.023897Z",
+   "last_error_at": null,
+   "refresh_requested_at": "2026-11-27T11:29:32.019843Z",
+   "payload": {
+    "metrics": [
+     {
+      "variants": {
+       "buy_now": {
+        "n": 57,
+        "sum": 25,
+        "sum_squares": 25
+       },
+       "control": {
+        "n": 44,
+        "sum": 17,
+        "sum_squares": 17
+       },
+       "get_it_today": {
+        "n": 42,
+        "sum": 18,
+        "sum_squares": 18
+       }
+      },
+      "inference": {
+       "buy_now": null,
+       "get_it_today": null
+      },
+      "metric_id": 1,
+      "conversions_timeseries": {
+       "points": [
+        {
+         "bucket": "2026-11-27T11:00:00+00:00",
+         "converted_identities": {
+          "buy_now": 25,
+          "control": 17,
+          "get_it_today": 18
+         }
+        }
+       ],
+       "granularity": "hour"
+      }
+     }
+    ],
+    "srm_p_value": null,
+    "exposures_timeseries": {
+     "points": [
+      {
+       "bucket": "2026-11-27T11:00:00+00:00",
+       "new_identities": {
+        "buy_now": 57,
+        "control": 44,
+        "get_it_today": 42
+       }
+      }
+     ],
+     "granularity": "hour"
+    }
+   },
+   "is_final": false
+  }
+ }
+}
