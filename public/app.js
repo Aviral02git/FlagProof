@@ -88,6 +88,8 @@ function renderAgentState(state){
 }
 $('#agent-draft').onclick=async()=>{
  $('#agent-draft').disabled=true;$('#agent-notice').textContent='Drafting a proposal…';$('#agent-notice').classList.remove('error');
+ // A new draft replaces whatever was on screen: a failed or refused draft must not leave the previous proposal, checks or buttons looking current.
+ proposal=null;$('#agent-proposal').hidden=true;for(const id of ['#agent-summary','#agent-diff','#agent-checks','#agent-source','#agent-execution'])$(id).textContent='';$('#agent-result').hidden=true;$('#agent-approve').disabled=true;$('#agent-reject').disabled=true;pill($('#agent-status'),'No proposal yet','neutral');
  try{
   proposal=await api('/api/experiments/propose',{request:$('#agent-request').value});
   $('#agent-proposal').hidden=false;$('#agent-result').hidden=true;
