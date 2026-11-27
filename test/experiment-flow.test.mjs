@@ -207,3 +207,11 @@ test('durable gate: when the ledger refuses after the experiment was created, th
  const r=await draft(flow);await assert.rejects(()=>flow.approve(r.id,'a',{hash:r.hash,start:true}),e=>e.status===429&&/allowance/.test(e.message));
  assert.deepEqual(released,[42]);
 });
+
+test('summariseAnalysis names the threshold from the approved proposal hypothesis, not a fixed 10',()=>{
+ const body={results:{as_of:'x',payload:{metrics:[{variants:{control:{n:90,sum:27},buy_now:{n:100,sum:45}},inference:{buy_now:{lift:0.5,ci_low:0.1,ci_high:0.9,chance_to_win:0.9}}}]}}};
+ const five=summariseAnalysis({results:body.results},'"Buy now" will increase completion by at least 5 percentage points');
+ assert.equal(five.threshold,5);assert.match(five.text,/absolute 5-point threshold/);assert.doesNotMatch(five.text,/10-point/);
+ const none=summariseAnalysis({results:body.results},'no number here');
+ assert.equal(none.threshold,null);assert.doesNotMatch(none.text,/\d+-point/);assert.match(none.text,/No absolute threshold/);
+});

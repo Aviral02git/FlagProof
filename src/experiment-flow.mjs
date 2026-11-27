@@ -40,13 +40,14 @@ export function describeResult(artifact,executor,measuredTotal=0){
  return `${base} Recorded as a fixture artifact. No Flagsmith project was contacted, so there is no experiment and no result.`;
 }
 
-export function summariseAnalysis(results){
+export function summariseAnalysis(results,hypothesis=''){
  const m=results?.results?.payload?.metrics?.[0];if(!m)return {ready:false,text:'Flagsmith returned no analysis yet.',rows:[]};
  const rows=Object.entries(m.variants||{}).map(([key,v])=>{const inf=m.inference?.[key];
   return {key,exposures:v.n,conversions:v.sum,rate:v.n?v.sum/v.n:null,lift:inf?inf.lift:null,ciLow:inf?inf.ci_low:null,ciHigh:inf?inf.ci_high:null,win:inf?inf.chance_to_win:null};});
  const hasInf=rows.some(r=>r.lift!==null);
  const total=rows.reduce((n,r)=>n+r.exposures,0);
- return {ready:true,total,hasInference:hasInf,rows,text:hasInf?`Flagsmith's Bayesian analysis on ${total} synthetic visitors. Lift and win probability are by construction of the preset conversion rates, not evidence about real customers. The pre-registered 10-point absolute threshold cannot be judged from relative intervals.`:`${total} synthetic visitors entered. Flagsmith has not produced lift or win-probability estimates yet (inference is empty), so no winner is claimed.`};
+ const tm=String(hypothesis||'').match(/at least (\d+(?:\.\d+)?) percentage points/),thr=tm?tm[1]:null;
+ return {ready:true,total,threshold:thr==null?null:Number(thr),hasInference:hasInf,rows,text:hasInf?`Flagsmith's Bayesian analysis on ${total} synthetic visitors. Lift and win probability are by construction of the preset conversion rates, not evidence about real customers. ${thr?`The hypothesis of this proposal sets an absolute ${thr}-point threshold, which cannot be judged from relative intervals.`:'No absolute threshold could be read from this proposal\'s hypothesis, so none is judged here.'}`:`${total} synthetic visitors entered. Flagsmith has not produced lift or win-probability estimates yet (inference is empty), so no winner is claimed.`};
 }
 // ONE function sets both the reservation and the enforced worker ceiling: only rolloutPct of visitors enter, so more identities are sent to reach about 300 entrants (floor 150, cap 600).
 export function plannedIdentities(proposal,visitors=300){
@@ -124,7 +125,7 @@ export function createExperimentFlow({publicMode,env=process.env,artifactRoot,no
     for(const part of ['exposures/refresh/','results/refresh/']){try{await call('POST',exp+part);}catch(error){note=/429/.test(error.message)?'Flagsmith limits analysis refreshes to one per cooldown (about 5 minutes). Showing what it already holds.':error.message;}}
     // The refresh is queued (HTTP 202); poll the read endpoint, never the refresh, until Flagsmith stamps as_of.
     let results,summary;
-    for(let i=0;i<10;i++){await new Promise(res=>setTimeout(res,i?4000:2000));await call('GET',exp+'exposures/').catch(()=>{});results=await call('GET',exp+'results/');summary=summariseAnalysis({results:results?.results});if(results?.results?.as_of&&summary.ready&&summary.total>=(r.trafficSent||n)*(roll/100)*0.8)break;}
+    for(let i=0;i<10;i++){await new Promise(res=>setTimeout(res,i?4000:2000));await call('GET',exp+'exposures/').catch(()=>{});results=await call('GET',exp+'results/');summary=summariseAnalysis({results:results?.results},r.proposal.hypothesis);if(results?.results?.as_of&&summary.ready&&summary.total>=(r.trafficSent||n)*(roll/100)*0.8)break;}
     const want=(r.trafficSent||n)*(roll/100)*0.8;
     if(!summary.ready||summary.total<want)summary={...summary,ready:false,rows:summary.rows||[],text:`Flagsmith has processed ${summary.total||0} of the roughly ${Math.round((r.trafficSent||n)*roll/100)} synthetic visitors expected to enter (${r.trafficSent||n} sent, ${roll}% enter) so far${note?'. '+note:''} Nothing is claimed. Use "Check Flagsmith again" after the cooldown.${(gate||lock)?` This run's experiment stays available for about ${Math.round(RESULT_HOLD_MS/60000)} minutes for that, then it is cleaned up for the next visitor.`:''}`};
     if(summary.ready&&summary.total)r.result.summary=describeResult(art,r.result.executor,summary.total);
