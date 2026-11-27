@@ -7,6 +7,7 @@ import {executeExperimentProposalApi} from './experiment-execute.mjs';
 import {flagsmithHosts,managementBase} from './hosts.mjs';
 import {attachTrafficFence} from './traffic-fence.mjs';
 import {spawn} from 'node:child_process';
+import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 
 // Track 02 product flow behind the UI: request -> agent proposal -> human approval of the exact hash -> execution -> plain-language result.
@@ -116,7 +117,7 @@ export function createExperimentFlow({publicMode,env=process.env,artifactRoot,no
     if(!art.started){await call('POST',exp+'start/');art.started=true;}
     // Self-hosted Flagsmith has no analysis warehouse until one is connected (its own database). Flagsmith Cloud manages this itself, so Cloud is never touched.
     if(hosts.selfHosted){const wp=`environments/${env.FLAGSMITH_ENVIRONMENT_KEY}/warehouse-connections/`;const wl=await call('GET',wp);if(!(Array.isArray(wl)?wl:wl.results||[]).length)await call('POST',wp,{warehouse_type:'postgres',config:{source:'flagsmith_database'}});}
-    if(!readOnly){await new Promise((resolve,reject)=>{const child=spawn('node',[TRAFFIC,String(n)],{env:hosts.selfHosted?{...env,FLAGSMITH_EVENTS_API_URL:hosts.origin+'/api/'}:Object.fromEntries(Object.entries(env).filter(([k])=>!['FLAGSMITH_API_URL','FLAGSMITH_EVENTS_API_URL'].includes(k))),stdio:['ignore','ignore','ignore','ipc']});let asked=0;attachTrafficFence(child,async()=>++asked<=n&&(!lock||!r.lease||lock.holds(owner,r.lease.token))&&(!gate||await gate.owns(art.experimentId,{name:r.proposal?.name})),{onStop:()=>reject(new Error('Synthetic traffic stopped: this run no longer owns the demo experiment.'))});const timer=setTimeout(()=>{child.kill();reject(new Error('Synthetic traffic timed out'));},200000);child.on('exit',code=>{clearTimeout(timer);code===0?resolve():reject(new Error('Synthetic traffic script failed'));});child.on('error',reject);});
+    if(!readOnly){await new Promise((resolve,reject)=>{const child=spawn('node',[TRAFFIC,String(n)],{env:hosts.selfHosted?{...env,FLAGSMITH_EVENTS_API_URL:hosts.origin+'/api/'}:Object.fromEntries(Object.entries(env).filter(([k])=>!['FLAGSMITH_API_URL','FLAGSMITH_EVENTS_API_URL'].includes(k))),stdio:['ignore','ignore','pipe','ipc']});let errTail='';child.stderr.on('data',d=>{errTail=(errTail+d).slice(-600);});let asked=0;attachTrafficFence(child,async()=>++asked<=n&&(!lock||!r.lease||lock.holds(owner,r.lease.token))&&(!gate||await gate.owns(art.experimentId,{name:r.proposal?.name})),{onStop:()=>reject(new Error('Synthetic traffic stopped: this run no longer owns the demo experiment.'))});const timer=setTimeout(()=>{child.kill();reject(new Error('Synthetic traffic timed out'));},200000);child.on('exit',code=>{clearTimeout(timer);if(code!==0){let t=errTail;for(const v of Object.values(env))if(typeof v==='string'&&v.length>=8)t=t.split(v).join('[redacted]');console.error(`traffic worker exited with code ${code}: ${t.replace(/\s+/g,' ').slice(-300)}`);}code===0?resolve():reject(new Error('Synthetic traffic script failed'));});child.on('error',reject);});
      await new Promise(res=>setTimeout(res,Number(env.FLAGPROOF_SETTLE_MS??10000)));r.trafficSent=n;}
     // Flagsmith allows one analysis refresh per experiment per cooldown (about 5 minutes), so this makes ONE attempt and says so.
     let note='';
@@ -147,6 +148,7 @@ export function createExperimentFlow({publicMode,env=process.env,artifactRoot,no
    let lease=null;
    // Durable gate (state lives in Flagsmith, so it survives a restart): sweep stale leftovers, then refuse unless the demo slot is free and under its ceiling.
    // Any failure refuses. The experiment create below is still the atomic mutex, so two visitors passing this check at once cannot both create one.
+   if(ex.live&&ex.measure&&!existsSync(TRAFFIC))throw Object.assign(new Error('This demo cannot run its synthetic traffic step right now, so nothing was created and no quota was used.'),{status:503});// fail before any reservation or Cloud write
    if(gate&&ex.live){let g;try{await gate.sweep();g=await gate.check();}catch{g={ok:false,reason:'state-unavailable',retryAfterSec:60};}if(!g.ok)throw Object.assign(new Error(gateMessage(g)),{status:429});}
    if(lock&&ex.live){lease=lock.tryAcquire(owner);if(!lease.ok)throw Object.assign(new Error(gateMessage(lease)),{status:429});}
    r.status='approved';let artifact=null;

@@ -29,7 +29,7 @@ test('generateExperimentProposal: manual template default, no ollama call withou
  const record=await generateExperimentProposal({});
  assert.equal(record.source,'manual-template');
  assert.equal(record.proposal.kind,'experiment-proposal');
- await assert.rejects(()=>generateExperimentProposal({FLAGPROOF_PLANNER:'ollama'}),/OLLAMA_MODEL/);
+ await assert.rejects(()=>generateExperimentProposal({FLAGPROOF_PLANNER:'ollama'},{request:'half'}),/OLLAMA_MODEL/);
 });
 test('fixture execution writes only an artifact, performs no network',async()=>{
  const dir=await mkdtemp(path.join(os.tmpdir(),'fp-exp-plan-'));

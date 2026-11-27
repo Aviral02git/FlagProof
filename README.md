@@ -66,17 +66,21 @@ No actual order or charge is made.
 ## Hosted public demo
 
 `FLAGPROOF_PUBLIC=1` runs FlagProof as a locked public demo for hosted
-evaluation. In this mode the bundled local fixture is forced on and live flag
-providers stay off. Each visitor gets an isolated session, plans and runs are
-visible only to the visit that created them, and suite starts are rate limited
-per IP with a daily cap. Artifacts expire automatically.
+evaluation. In this mode the eight-configuration matrix always runs on the
+bundled local fixture and never writes to a live flag provider. The experiment
+agent panel is the one exception, and only when `FLAGPROOF_PUBLIC_LIVE=1` and
+the demo guards are configured: it then creates and measures one experiment at
+a time in a separate Flagsmith Cloud demo project with labelled synthetic
+visitors, within a monthly allowance. Each visitor gets an isolated session,
+plans and runs are visible only to the visit that created them, and suite
+starts are rate limited per IP with a daily cap. Artifacts expire automatically.
 
 Required: `PUBLIC_ORIGIN` (the public URL of the deployment).
 Optional: `PUBLIC_DEMO_PASSWORD` (entry password; without it the demo is
 open), `TRUST_PROXY=1` (only behind a proxy you control, so per IP limits see
 real client IPs).
 
-This mode is built for fixture-only hosted evaluation during the hackathon.
+The matrix in this mode is fixture-only, built for hosted evaluation during the hackathon.
 The protections above are covered by automated tests, but a public demo is
 not production infrastructure and makes no production security guarantee.
 Local private use is unchanged.
@@ -160,7 +164,7 @@ What this does not show:
 | Optional plain-language request to the planner (up to 300 characters) | Working, with limits. The request is passed to the model as data. On 27 Nov 2026 qwen2.5:1.5b answered "only expose half" with a 50% rollout (a reviewable proposal with its hash). qwen2.5:0.5b ignored requests or returned invalid output. Covered by mocked unit tests. |
 | Planner proposal, hash approval and execution on self-hosted Flagsmith | Run on 27 Nov 2026 against the open-source Flagsmith API on localhost with synthetic visitors. The 1.5b proposal (rollout 50%) was executed after its hash was supplied by the verification script, not typed by a person. The experiment was created and started, and Flagsmith's own analysis counted 143 of 300 visitors as enrolled. That is too few visitors for intervals, so no winner is claimed. The interactive prompt in `scripts/propose-experiment.mjs` was also run on 27 Nov 2026 against the local fixture with piped input: a wrong hash cancelled with "Nothing executed" and the exact hash was accepted. |
 | AI-authored result explanation | **Not implemented**. The summary is deterministic. |
-| Hosted public demo mode (locked fixture-only serving, per-visitor isolated sessions, per-IP rate limits with daily cap, expiring artifacts, optional entry password) | Implemented and covered by automated tests; deployed on Render and verified live 25 Nov 2026; a demo, not production infrastructure |
+| Hosted public demo mode (matrix served from the local fixture, per-visitor isolated sessions, per-IP rate limits with daily cap, expiring artifacts, optional entry password; experiment agent panel can use a guarded Flagsmith Cloud demo project) | Implemented and covered by automated tests; the matrix was verified live on Render 25 Nov 2026. The live experiment panel is described in "Experiment agent panel"; a demo, not production infrastructure |
 | Production app targeting and CI | **Not implemented** |
 
 The verified Flagsmith run covered the selected disposable environment only: plain boolean flags, no overrides, one writer. It is not proof of safety for arbitrary accounts, other flag types, concurrent writers or production use.

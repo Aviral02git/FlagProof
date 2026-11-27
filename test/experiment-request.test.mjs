@@ -24,5 +24,5 @@ test('request is sent as quoted data and changed fields are recorded',async()=>{
 });
 test('invalid model output is refused with Nothing will run',async()=>{
  await withFetch('{"bad":1}',async()=>{await assert.rejects(()=>generateExperimentProposal(env,{request:'x'}),/Nothing will run/);});
- await withFetch('not json',async()=>{await assert.rejects(()=>generateExperimentProposal(env),/Nothing will run/);});
+ await withFetch('not json',async()=>{await assert.rejects(()=>generateExperimentProposal(env,{request:'y'}),/Nothing will run/);});
 });
