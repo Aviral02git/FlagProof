@@ -13,7 +13,7 @@ test('checkModelProposal rejects changed keys, bad split, bad rollout and URL te
  c=clone();c.hypothesis='visit https://evil.example now';assert.throws(()=>checkModelProposal(c,base()),/URL or command/);
 });
 test('request needs the ollama planner and is capped at 300 chars',async()=>{
- await assert.rejects(()=>generateExperimentProposal({}, {request:'half'}),/needs the local planner/);
+ await assert.rejects(()=>generateExperimentProposal({}, {request:'half'}),/needs an AI planner/);
  await assert.rejects(()=>generateExperimentProposal(env,{request:'x'.repeat(301)}),/300 characters/);
 });
 test('request is sent as quoted data and changed fields are recorded',async()=>{

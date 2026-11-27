@@ -60,7 +60,7 @@ async function refresh(){try{
  $('#integration-note').textContent=lastState.mode==='flagsmith'?'Flagsmith management API and browser SDK are selected for an isolated demo environment. Each case must verify both management read-back and SDK-resolved state. Inspect this run before claiming success. The checkout remains synthetic; manual-template planning is not AI.':'Default flag state is local, not Flagsmith. Plans come from a manual template, not an AI model. An isolated Flagsmith configuration must be verified by its measured report. A passing matrix only covers this journey and these eight configurations.';
  if(lastState.active)selectedId='';
  const run=selectedId?(lastState.recent.find(r=>r.id===selectedId)||await api(`/api/runs/${selectedId}`)):lastState.active||lastState.recent[0];
- if(run)renderRun(run);updateOptions();
+ if(run)renderRun(run);updateOptions();renderAgentState(lastState);
  $('#history-warning').textContent=[lastState.recoveryBlock,...lastState.historyWarnings].filter(Boolean).join(' ');
  if(lastState.recoveryBlock)$('#generate').disabled=true;
  $('#history').disabled=!!lastState.active;
@@ -77,4 +77,48 @@ $('#reject').onclick=async()=>{try{await api(`/api/plans/${plan.id}/reject`,{});
 $('#approve').onclick=async()=>{try{const run=await api(`/api/plans/${plan.id}/approve`,{hash:plan.hash});plan.status='approved';selectedId='';comparisonKey='';pill($('#plan-status'),'Approved','pass');$('#approve').disabled=true;$('#reject').disabled=true;notice('Running the reviewed plan. Fresh browser context for each configuration.');renderRun(run);}catch(error){notice(error.message,true);}};
 $('#cancel').onclick=async()=>{try{await api(`/api/runs/${currentRun.id}/cancel`,{});notice('Cancellation requested. Waiting for the current operation and verified cleanup.');}catch(error){notice(error.message,true);}};
 $('#lock-form').onsubmit=async event=>{event.preventDefault();$('#lock-error').textContent='';try{const response=await fetch('/api/enter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('#lock-password').value})});const data=await response.json().catch(()=>({}));if(!response.ok){$('#lock-error').textContent=data.error||'Wrong demo password.';return;}$('#lock').hidden=true;notice('');await refresh();}catch{$('#lock-error').textContent='Could not reach the demo server.';}};
+
+// Track 2: experiment agent panel
+let proposal;
+function renderAgentState(state){
+ const a=state.agent;if(!a)return;
+ $('#agent-mode').textContent=`Planner: ${a.planner} · Execution: ${a.executor.label}`;
+ $('#agent-request').disabled=!a.plannerConfigured;
+ if(!a.plannerConfigured)$('#agent-request').placeholder='No AI planner here. Draft the fixed template instead.';
+}
+$('#agent-draft').onclick=async()=>{
+ $('#agent-draft').disabled=true;$('#agent-notice').textContent='Drafting a proposal…';$('#agent-notice').classList.remove('error');
+ try{
+  proposal=await api('/api/experiments/propose',{request:$('#agent-request').value});
+  $('#agent-proposal').hidden=false;$('#agent-result').hidden=true;
+  $('#agent-summary').textContent=proposal.explain.summary;
+  $('#agent-diff').innerHTML=proposal.explain.rows.map(r=>`<tr class="${r.changed?'changed':''}"><td data-label="Field">${esc(r.field)}</td><td data-label="Fixed template">${esc(r.from)}</td><td data-label="Proposed">${esc(r.to)}${r.changed?' <span class="pill neutral">changed</span>':''}</td></tr>`).join('');
+  const checks=(proposal.requestCheck||[]).map(c=>c.ok===true?`<li class="ok">Matches your request: ${esc(c.claim)} (proposal has ${esc(c.actual)})</li>`:c.ok===false?`<li class="bad">Does NOT match your request: ${esc(c.claim)}, proposal has ${esc(c.actual)}. Reject it or edit the request.</li>`:`<li>Request not machine-checked (${esc(c.claim)}). Read the proposal yourself.</li>`);
+  const retried=(proposal.attempts||[]).length>1?'<li>The agent first drafted something that ignored your request, was told why, and redrafted once.</li>':'';
+  $('#agent-checks').innerHTML=retried+checks.join('')+'<li class="ok">Hard limits passed: fixed flag, event and variation keys, split adds to 100, no URLs or commands.</li>';
+  $('#agent-source').textContent=`Source: ${proposal.source}${proposal.requestText?` · your request: ${JSON.stringify(proposal.requestText)}`:''}`;
+  $('#agent-execution').textContent=`If approved: ${proposal.executor.label}. Synthetic data only.`;
+  $('#agent-json').textContent=JSON.stringify(proposal.proposal,null,2);$('#agent-hash').textContent=`Fingerprint ${proposal.hash}`;
+  pill($('#agent-status'),'Awaiting your approval','neutral');$('#agent-approve').disabled=(proposal.requestCheck||[]).some(c=>c.ok===false);$('#agent-reject').disabled=false;$('#agent-notice').textContent='';
+ }catch(error){$('#agent-notice').textContent=error.message;$('#agent-notice').classList.add('error');}
+ finally{$('#agent-draft').disabled=false;}
+};
+$('#agent-reject').onclick=async()=>{try{await api(`/api/experiments/${proposal.id}/reject`,{});pill($('#agent-status'),'Rejected','neutral');$('#agent-approve').disabled=true;$('#agent-reject').disabled=true;$('#agent-notice').textContent='Rejected. Nothing was recorded or changed.';}catch(error){$('#agent-notice').textContent=error.message;$('#agent-notice').classList.add('error');}};
+$('#agent-approve').onclick=async()=>{
+ $('#agent-approve').disabled=true;$('#agent-reject').disabled=true;
+ try{
+  const done=await api(`/api/experiments/${proposal.id}/approve`,{hash:proposal.hash,start:Boolean(proposal.executor.measure)});
+  const liveNotStarted=done.result.executor.live&&!done.result.artifact.started;
+  pill($('#agent-status'),liveNotStarted?'Created, not started':done.result.executor.live?'Approved and executed':'Approved and recorded','pass');
+  $('#agent-result').hidden=false;$('#agent-result').className='finding finding-pass';
+  $('#agent-result').innerHTML=`<p class="eyebrow">RESULT · ${esc(done.result.executor.live?(liveNotStarted?'CREATED ON FLAGSMITH, NOT STARTED':'EXECUTED ON FLAGSMITH'):'FIXTURE RECORD ONLY')}</p><h3>${esc(done.result.executor.live?`Experiment ${done.result.artifact.experimentId} ${liveNotStarted?'created, not started':'created and started'}`:'Approved and recorded')}</h3><p id="agent-result-summary">${esc(done.result.summary)}</p><p class="small">Approved via: ${esc(done.result.artifact.approvedBy)} · fingerprint ${esc(done.hash.slice(0,16))}</p>${done.result.executor.measure?'<button id="agent-measure" class="secondary">Send labelled synthetic traffic and read Flagsmith\'s analysis (about 1 minute)</button><div id="agent-measure-out"></div>':''}`;
+  if(done.result.executor.measure){
+   const show=(m,again)=>{const a=m.measurement.analysis;const final=Boolean(again||(a.ready&&a.hasInference));$('#agent-measure').style.display='none';{const h=$('#agent-result h3');const id=h&&h.textContent.match(/Experiment (\d+)/);if(id)h.textContent=`Experiment ${id[1]} ${a.ready&&a.hasInference?'measured':'started, results not final yet'}`;pill($('#agent-status'),a.ready&&a.hasInference?'Measured':'Started, results not final','pass');const eb=$('#agent-result .eyebrow');if(eb)eb.textContent='RESULT · STARTED ON FLAGSMITH · SYNTHETIC TRAFFIC';const sm=$('#agent-result-summary');if(sm&&!(a.ready&&a.hasInference))sm.textContent='The experiment was started and labelled synthetic traffic was sent. Flagsmith has not finished its analysis, so no result is claimed and no winner is named.';}if(a.ready&&a.hasInference&&m.result&&m.result.summary&&$("#agent-result-summary"))$("#agent-result-summary").textContent=m.result.summary;
+    $('#agent-measure-out').innerHTML=`<p class="eyebrow">${a.ready?'MEASURED':'NOT MEASURED YET'} · SYNTHETIC TRAFFIC · FLAGSMITH ANALYSIS</p><p>${esc(a.text)}</p>${a.ready?`<table class="agent-diff"><thead><tr><th>Variation</th><th>Exposures</th><th>Converted</th><th>Rate</th><th>Lift vs control (95% interval)</th><th>Win probability</th></tr></thead><tbody>${a.rows.map(r=>`<tr><td data-label="Variation">${esc(r.key)}</td><td data-label="Exposures">${r.exposures}</td><td data-label="Converted">${r.conversions}</td><td data-label="Rate">${r.rate===null?'-':(r.rate*100).toFixed(1)+'%'}</td><td data-label="Lift vs control (95% interval)">${r.lift===null?(r.key==='control'?'baseline':'not estimated yet'):`${(r.lift*100).toFixed(1)}% [${(r.ciLow*100).toFixed(1)}%, ${(r.ciHigh*100).toFixed(1)}%]`}</td><td data-label="Win probability">${r.win===null?'-':(r.win*100).toFixed(0)+'%'}</td></tr>`).join('')}</tbody></table>`:''}${final?'<p class="small">This run is finished. Its experiment was cleaned up for the next visitor. Start a new run to measure again.</p>':'<button id="agent-recheck" class="secondary">Check Flagsmith again (refresh is limited to about once per 5 minutes)</button>'}`;
+    if($('#agent-recheck'))$('#agent-recheck').onclick=async()=>{$('#agent-recheck').disabled=true;$('#agent-measure-out').classList.remove('error');try{show(await api(`/api/experiments/${proposal.id}/measure`,{readOnly:true}),true);}catch(error){$('#agent-measure-out').textContent=error.message;$('#agent-measure-out').classList.add('error');}};};
+   $('#agent-measure').onclick=async()=>{$('#agent-measure').disabled=true;$('#agent-measure-out').textContent='Starting the experiment, sending labelled synthetic visitors, waiting for Flagsmith (about 1 minute)…';
+    try{show(await api(`/api/experiments/${proposal.id}/measure`,{}));}catch(error){$('#agent-measure-out').textContent=error.message;$('#agent-measure-out').classList.add('error');$('#agent-measure').disabled=false;}};
+  }
+ }catch(error){$('#agent-notice').textContent=error.message;$('#agent-notice').classList.add('error');pill($('#agent-status'),/^Execution failed/.test(error.message)?'Failed':'Not started','fail');}
+};
 renderRun(null);await refresh();setInterval(refresh,700);

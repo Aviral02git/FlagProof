@@ -115,6 +115,27 @@ The dashboard shows **SELF-HOSTED FLAGSMITH API + SDK**. To run the checks witho
 
 Checked on 27 Nov 2026 from an empty directory: the matrix ran 8 configurations plus one reproduction run, 9 cases in all: 6 passed and 3 failed (the seeded defect), with flags restored and read back. The experiment was created and started, synthetic visitors were sent, and Flagsmith's own analysis returned. Numbers from a self-hosted run differ from the Cloud run and are never combined with it. `docker-compose.selfhosted.yml` is written but has not been run.
 
+## Experiment agent panel
+
+The home page has a panel, "03 / Ask the experiment agent", for the checkout button copy experiment. You describe a change in plain words (up to 300 characters). The agent drafts a Flagsmith experiment proposal. It can change only four things: the experiment name, the hypothesis, the traffic split and the share of visitors who enter. The flag, event and variation keys are fixed.
+
+Before anything runs you see the proposal as a field-by-field comparison with the fixed template, a check of the proposal against your request, the hard-limit check, and a fingerprint. Approval is bound to that fingerprint. The request check is narrow: it machine-checks only a rollout percentage or a three-way traffic split named in your request, and a proposal that contradicts either cannot be approved. The name and hypothesis are not machine-checked against your request, so read them yourself. Nothing is created until you approve.
+
+The panel states which mode it is in:
+
+- **Fixture mode** (the default, and what the hosted demo shows unless live mode is turned on): approval is recorded as an artifact and Flagsmith is never contacted.
+- **Flagsmith mode**: approval creates the experiment in a Flagsmith project. On the Flagsmith Cloud demo project, one run at a time is allowed, and the demo has a monthly allowance of synthetic visitors. When the allowance is used up, or someone else's run is active, the panel says so and starts nothing.
+
+In Flagsmith mode, a run is a single click that does three things: it starts the experiment, sends labelled synthetic visitors (300 per run, up to 600 when half or fewer of the visitors enter), and reads Flagsmith's own analysis. Flagsmith needs time and enough exposures to produce lift and win-probability estimates. If they are not there yet, the panel says so and names no winner. You can check again once. The experiment is kept for about 6 minutes for that check and is then deleted so the next visitor can use the demo. After that, the run is closed and a new run is needed.
+
+What this does not show:
+
+- All visitors are synthetic. Conversion outcomes come from preset rates, so any lift is by construction and says nothing about real users.
+- The panel never claims a winner. When Flagsmith returns estimates they come from synthetic visitors with preset conversion rates, so they hold by construction, and the 10-point absolute threshold in the hypothesis is not judged from relative intervals.
+- The approving click in recorded runs was made through the browser UI by a Playwright script. The product cannot tell a person's click from automation.
+- Cloud and self-hosted numbers are never combined.
+- No time-saved claim is made, because no manual baseline was measured.
+
 ## What is working, and what is not
 
 | Capability | Status |

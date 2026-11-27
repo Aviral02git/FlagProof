@@ -1,3 +1,4 @@
+import {managementBase} from './hosts.mjs';
 import {ExperimentProposalSchema} from './experiment-plan.mjs';
 import {EXPERIMENT_EVENT} from './experiment-config.mjs';
 
@@ -53,7 +54,7 @@ export async function executeExperimentProposalApi(record,{env=process.env,fetch
  const environment=env.FLAGSMITH_ENVIRONMENT_KEY;
  if(!key)throw new Error('Live execution needs FLAGSMITH_MANAGEMENT_KEY in .env. Without it, use the fixture path.');
  if(!environment)throw new Error('Live execution needs FLAGSMITH_ENVIRONMENT_KEY in .env. Run npm run setup:flagsmith first.');
- const base=(env.FLAGSMITH_API_URL||API_BASE_DEFAULT).replace(/\/?$/,'/');
+ const base=managementBase(env);
  const call=(method,path,body)=>apiCall(fetchImpl,base,method,path,key,body);
 
  const totalWeight=proposal.variations.reduce((n,v)=>n+v.weightPct,0);
@@ -170,7 +171,7 @@ export async function createAdapterProbeFeature({env=process.env,fetchImpl=fetch
  const key=env.FLAGSMITH_MANAGEMENT_KEY;
  const environment=env.FLAGSMITH_ENVIRONMENT_KEY;
  if(!key||!environment)throw new Error('Probe creation needs FLAGSMITH_MANAGEMENT_KEY and FLAGSMITH_ENVIRONMENT_KEY.');
- const base=(env.FLAGSMITH_API_URL||API_BASE_DEFAULT).replace(/\/?$/,'/');
+ const base=managementBase(env);
  const call=(method,path,body)=>apiCall(fetchImpl,base,method,path,key,body);
  const envDetail=await call('GET',`environments/${environment}/`);
  const projectId=envDetail.project;
@@ -213,7 +214,7 @@ export async function cleanupAdapterProbe({env=process.env,fetchImpl=fetch,exper
  const key=env.FLAGSMITH_MANAGEMENT_KEY;
  const environment=env.FLAGSMITH_ENVIRONMENT_KEY;
  if(!key||!environment)throw new Error('Cleanup needs FLAGSMITH_MANAGEMENT_KEY and FLAGSMITH_ENVIRONMENT_KEY.');
- const base=(env.FLAGSMITH_API_URL||API_BASE_DEFAULT).replace(/\/?$/,'/');
+ const base=managementBase(env);
  const call=(method,path,body)=>apiCall(fetchImpl,base,method,path,key,body);
  const removed=[];
  const failures=[];
@@ -258,7 +259,7 @@ export async function runAdapterVerification({env=process.env,fetchImpl=fetch}={
  const key=env.FLAGSMITH_MANAGEMENT_KEY;
  const environment=env.FLAGSMITH_ENVIRONMENT_KEY;
  if(!key||!environment)throw new Error('Verification needs FLAGSMITH_MANAGEMENT_KEY and FLAGSMITH_ENVIRONMENT_KEY in .env.');
- const base=(env.FLAGSMITH_API_URL||API_BASE_DEFAULT).replace(/\/?$/,'/');
+ const base=managementBase(env);
  const call=(method,path,body)=>apiCall(fetchImpl,base,method,path,key,body);
  const report={probe:null,metric:null,experiment:null,verified:false,cleanup:null,leftovers:[]};
  let experimentId=null;let featureId=null;let metricCreatedId=null;

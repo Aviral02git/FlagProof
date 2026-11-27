@@ -10,3 +10,11 @@
 .results-section{margin:30px 0;border-top:1px solid var(--line);padding-top:24px}.results-section h2{font-size:19px}.result-bar-row{display:flex;align-items:center;gap:10px;margin:10px 0}.result-bar-label{width:92px;font:10px ui-monospace,monospace;color:var(--muted)}.result-bar-track{flex:1;background:#eef1e6;border-radius:4px;height:16px;overflow:hidden}.result-bar-fill{display:block;height:100%;background:var(--deep)}.result-bar-value{font:10px ui-monospace,monospace;min-width:44px;text-align:right}
 .result-row{cursor:pointer}.result-row:hover td{background:#f2f5ea}#detail{white-space:pre-wrap;font:11px/1.7 ui-monospace,monospace;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px;margin:12px 0}#conclusions{font-size:12px;line-height:1.8;padding-left:18px;color:var(--ink)}#conclusions li{margin:8px 0}
 .top-links{display:flex;gap:1.25rem;align-items:center}
+
+.agent-panel{margin:32px 0}.agent-panel textarea{width:100%;font:inherit;padding:10px;border:1px solid #c9ccc2;border-radius:6px;margin:6px 0 12px;box-sizing:border-box}
+.agent-diff{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0}.agent-diff th,.agent-diff td{text-align:left;padding:8px;border-bottom:1px solid #dfe1d8;vertical-align:top}.agent-diff tr.changed td{background:#f1f6e4}
+.agent-checks{list-style:none;padding:0;margin:8px 0}.agent-checks li{padding:6px 10px;margin:4px 0;border-left:3px solid #9aa08c;font-size:14px}.agent-checks li.ok{border-color:#2d6a3e}.agent-checks li.bad{border-color:#b3261e;background:#fbeceb}
+@media (max-width:640px){.agent-diff{min-width:0!important}.agent-diff thead{position:absolute;left:-9999px}.agent-diff,.agent-diff tbody,.agent-diff tr,.agent-diff td{display:block;width:100%;box-sizing:border-box}.agent-diff tr{border-bottom:1px solid #dfe1d8;padding:6px 0}.agent-diff td{border:0;padding:3px 8px}.agent-diff td::before{content:attr(data-label) ": ";font-weight:600;font-size:12px;color:#5b6150}}
+
+#agent-measure-out button{margin-top:14px}
+#agent-measure-out{margin-top:12px}

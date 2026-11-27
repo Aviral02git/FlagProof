@@ -1,3 +1,5 @@
+import {createExperimentFlow} from './experiment-flow.mjs';
+import {buildDemoGuards} from './demo-guards.mjs';
 import {flagsmithHosts} from './hosts.mjs';
 import {createServer} from 'node:http';
 import {readFile,mkdir,stat} from 'node:fs/promises';
@@ -13,7 +15,7 @@ import {compareRuns,reportMarkdown} from './report.mjs';
 import {createPublicGuard} from './public-guard.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.zip':'application/zip'};
-export async function startServer({port=Number(process.env.PORT||4317),artifactRoot=path.join(ROOT,'artifacts'),adapter=createAdapter()}={}){
+export async function startServer({port=Number(process.env.PORT||4317),artifactRoot=path.join(ROOT,'artifacts'),adapter=createAdapter(),flowOptions={}}={}){
  await mkdir(artifactRoot,{recursive:true});
  const csrf=randomBytes(24).toString('hex');let active=null;let planning=false;let approving=false;const plans=new Map();
  const runnerTickets=new Map(); // run-scoped tickets: let the server-side runner read only the fixture config, only while its run is active; never the visitor session
@@ -21,6 +23,7 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
  const {runs,warnings:historyWarnings}=publicMode?{runs:new Map(),warnings:[]}:await loadHistory(artifactRoot);
  const blocked=()=>recoveryBlock(runs,historyWarnings,adapter.mode);
  let origin;
+ const flow=createExperimentFlow({publicMode,artifactRoot,...buildDemoGuards(process.env),...flowOptions});
  function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
  async function body(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>32768)throw new Error('Request too large');}return text?JSON.parse(text):{};}
  async function serve(res,file){const data=await readFile(file);res.writeHead(200,{'Content-Type':TYPES[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(data);}
@@ -46,7 +49,16 @@ export async function startServer({port=Number(process.env.PORT||4317),artifactR
     if(pathname!=='/api/enter'&&req.headers['x-flagproof-token']!==(publicMode?sess.token:csrf))return json(res,403,{error:'Missing local action token'});
    }
    if(pathname==='/favicon.ico'&&req.method==='GET'){res.writeHead(204);return res.end();}
-   if(pathname==='/api/state'&&req.method==='GET')return json(res,200,{mode:adapter.mode,modeLabel:adapter.label,locked:publicMode?false:undefined,hosted:publicMode?true:undefined,planner:process.env.FLAGPROOF_PLANNER==='ollama'?(process.env.OLLAMA_MODEL==='qwen2.5:0.5b'?'local-ollama:qwen2.5:0.5b (verified 2026-11-20)':`local-ollama:${process.env.OLLAMA_MODEL||'unset'} (untested model)`):'manual-template (not AI)',token:publicMode?sess.token:csrf,active:active&&(!publicMode||sess.runs.has(active))?runs.get(active):null,recoveryBlock:blocked(),historyWarnings,recent:publicMode?[...sess.runs].map(id=>runs.get(id)).filter(Boolean).slice(-12).reverse():[...runs.values()].reverse().slice(0,12),preEvent:true});
+   if(pathname==='/api/state'&&req.method==='GET')return json(res,200,{mode:adapter.mode,modeLabel:adapter.label,locked:publicMode?false:undefined,hosted:publicMode?true:undefined,agent:flow.agent(),planner:process.env.FLAGPROOF_PLANNER==='ollama'?(process.env.OLLAMA_MODEL==='qwen2.5:0.5b'?'local-ollama:qwen2.5:0.5b (verified 2026-11-20)':`local-ollama:${process.env.OLLAMA_MODEL||'unset'} (untested model)`):'manual-template (not AI)',token:publicMode?sess.token:csrf,active:active&&(!publicMode||sess.runs.has(active))?runs.get(active):null,recoveryBlock:blocked(),historyWarnings,recent:publicMode?[...sess.runs].map(id=>runs.get(id)).filter(Boolean).slice(-12).reverse():[...runs.values()].reverse().slice(0,12),preEvent:true});
+   if(pathname==='/api/experiments/propose'&&req.method==='POST'){
+    const input=await body(req);
+    try{const rec=await flow.propose({owner:publicMode?sess.id:'local',ip:guard?guard.clientIp(req,trustProxy):'local',request:input.request});return json(res,201,rec);}catch(error){return json(res,error.status||400,{error:error.message.slice(0,500)});}
+   }
+   const expMatch=pathname.match(/^\/api\/experiments\/([a-f0-9-]+)\/(reject|approve|measure)$/);
+   if(expMatch&&req.method==='POST'){
+    const input=await body(req);
+    try{const rec=expMatch[2]==='reject'?flow.reject(expMatch[1],publicMode?sess.id:'local'):expMatch[2]==='measure'?await flow.measure(expMatch[1],publicMode?sess.id:'local',input):await flow.approve(expMatch[1],publicMode?sess.id:'local',input);return json(res,200,rec);}catch(error){return json(res,error.status||400,{error:error.message.slice(0,500)});}
+   }
    if(pathname==='/api/demo-config'&&req.method==='GET')return json(res,200,{...adapter.publicConfig(),scenario:active?runs.get(active)?.plan.scenario:'seeded-interaction',flags:adapter.mode==='local-fixture'?await adapter.read():undefined});
    if(pathname==='/api/plans'&&req.method==='POST'){
     if(blocked())return json(res,409,{error:blocked()});

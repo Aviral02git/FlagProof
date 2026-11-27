@@ -89,3 +89,11 @@ test('runExperimentTraffic: rejects a variation outside the provided set',async(
  const client={async getExperimentFlag(){return {variant:'stranger'};},async trackEvent(){},async flushEvents(){}};
  await assert.rejects(()=>runExperimentTraffic({client,identities:['x-1'],variants:[{key:'twin_a'},{key:'twin_b'}],rates:{twin_a:0.4,twin_b:0.4}}),/unknown experiment variation: stranger/);
 });
+
+test('traffic stops before the next request once ownership is lost',async()=>{
+ const {runExperimentTraffic}=await import('../src/experiment.mjs');
+ let calls=0,alive=true;
+ const client={getExperimentFlag:async()=>{calls++;if(calls===5)alive=false;return {variant:'control'};},trackEvent:async()=>{}};
+ await assert.rejects(()=>runExperimentTraffic({client,identities:Array.from({length:50},(_,i)=>'i'+i),shouldContinue:()=>alive}),/ownership/);
+ assert.equal(calls,5);
+});

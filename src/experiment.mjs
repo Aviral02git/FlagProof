@@ -14,9 +14,10 @@ export function identityConverts(identity,variantKey,rate){
 // final flush. Returns counts per variation for reporting. Flag, event and
 // variants default to the Track-01 checkout experiment; the A/A plumbing check
 // passes its own flag, identical variations and equal rates.
-export async function runExperimentTraffic({client,identities,flag=EXPERIMENT_FLAG,event=EXPERIMENT_EVENT,variants=EXPERIMENT_VARIANTS,rates=Object.fromEntries(variants.map(v=>[v.key,v.conversionRate])),onProgress=()=>{}}){
+export async function runExperimentTraffic({client,identities,flag=EXPERIMENT_FLAG,event=EXPERIMENT_EVENT,variants=EXPERIMENT_VARIANTS,rates=Object.fromEntries(variants.map(v=>[v.key,v.conversionRate])),onProgress=()=>{},shouldContinue=()=>true}){
  const counts=Object.fromEntries(variants.map(v=>[v.key,{exposures:0,conversions:0}]));
  for(const identity of identities){
+  if(!(await shouldContinue()))throw new Error('Traffic stopped: ownership of the demo run was lost.');// send-boundary fence, checked before every request
   const f=await client.getExperimentFlag(flag,identity);
   const key=f?.variant||f?.value||variants[0].key;
   if(!variants.some(v=>v.key===key))throw new Error(`unknown experiment variation: ${key}`);

@@ -45,7 +45,8 @@ const client=new Flagsmith({environmentKey:environment,enableEvents:true,...(api
 const identities=Array.from({length:total},(_,i)=>`${prefix}-${String(i+1).padStart(4,'0')}`);
 console.log(`Simulating ${total} shoppers through experiment flag "${flag}", event "${event}".`);
 let done=0;
-const counts=await runExperimentTraffic({client,identities,flag,event,variants,rates,onProgress:()=>{if(++done%50===0)console.log(`  ${done}/${total} shoppers processed`);}});
+const askParent=process.send?()=>new Promise(resolve=>{const timer=setTimeout(()=>{process.off('message',on);resolve(false);},Number(process.env.FLAGPROOF_ASK_TIMEOUT_MS)||25000);const on=m=>{clearTimeout(timer);resolve(m&&m.go===true);};process.once('message',on);process.send({t:'next'});}):undefined;
+const counts=await runExperimentTraffic({...(askParent?{shouldContinue:askParent}:{}),client,identities,flag,event,variants,rates,onProgress:()=>{if(++done%50===0)console.log(`  ${done}/${total} shoppers processed`);}});
 await client.close();
 console.log('Done. Per-variant counts (synthetic demo fixtures, before Flagsmith-side aggregation):');
 for(const [key,c] of Object.entries(counts))console.log(`  ${key}: ${c.exposures} exposures, ${c.conversions} conversions`);

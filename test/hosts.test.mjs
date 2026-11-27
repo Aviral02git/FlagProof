@@ -11,3 +11,15 @@ test('environment check calls only the self-hosted host when configured',async()
  await verifyFlagsmithEnvironment({environment:'ENV',management:'KEY',fetchFn,env:{FLAGSMITH_API_URL:'http://localhost:8000/api/v1/'}});
  assert.ok(urls.length===4&&urls.every(u=>u.startsWith('http://localhost:8000/')),urls.join(' '));
 });
+
+import {managementBase} from '../src/hosts.mjs';
+test('Cloud mode: a management URL alone keeps SDK and event traffic on the Cloud edge host (not self-hosted)',()=>{
+ const env={FLAGSMITH_MANAGEMENT_URL:'https://api.flagsmith.com/api/v1'};
+ assert.equal(flagsmithHosts(env).selfHosted,false);
+ assert.equal(flagsmithHosts(env).sdkApi,'https://edge.api.flagsmith.com/api/v1/');
+ assert.equal(managementBase(env),'https://api.flagsmith.com/api/v1/');
+ assert.equal(managementBase({}),'https://api.flagsmith.com/api/v1/');
+ assert.equal(managementBase({FLAGSMITH_API_URL:'http://127.0.0.1:8000/api/v1'}),'http://127.0.0.1:8000/api/v1/');
+ assert.equal(managementBase({FLAGSMITH_API_URL:'http://a/api/v1/',FLAGSMITH_MANAGEMENT_URL:'http://b/api/v1/'}),'http://b/api/v1/');
+ assert.throws(()=>managementBase({FLAGSMITH_MANAGEMENT_URL:'ftp://x'}),/http/);
+});
