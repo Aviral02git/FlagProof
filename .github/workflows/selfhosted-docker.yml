@@ -1,0 +1,42 @@
+name: selfhosted-docker
+# Manual run only. Boots self-hosted Flagsmith from docker-compose.selfhosted.yml, creates
+# a fresh admin/project/flags, then runs the FlagProof matrix against it with cleanup checks.
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  compose-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FLAGSMITH_API_URL: http://localhost:8000/api/v1/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start Flagsmith and PostgreSQL
+        run: docker compose -f docker-compose.selfhosted.yml up -d
+      - name: Wait for Flagsmith health
+        run: |
+          for i in $(seq 1 90); do
+            curl -fsS http://localhost:8000/health && exit 0
+            sleep 5
+          done
+          docker compose -f docker-compose.selfhosted.yml logs --tail 200
+          exit 1
+      - name: Bootstrap a fresh instance
+        run: node scripts/bootstrap-selfhosted.mjs "$RUNNER_TEMP/ci.env"
+      - name: Matrix with restore and read-back
+        run: node scripts/verify-selfhosted.mjs "$RUNNER_TEMP/ci.env" "$RUNNER_TEMP/selfhosted-report.json"
+      - name: Report summary
+        if: always()
+        run: |
+          test -f "$RUNNER_TEMP/selfhosted-report.json" && node -e "const r=require(process.env.RUNNER_TEMP+'/selfhosted-report.json');console.log(JSON.stringify(r.summary??Object.keys(r)))" || true
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f docker-compose.selfhosted.yml down -v
+          rm -f "$RUNNER_TEMP/ci.env"
