@@ -4,8 +4,32 @@
 
 A flag can pass every individual test and still break a checkout when combined with another flag. FlagProof connects to a real Flagsmith environment through the management API and browser SDK, exercises every on/off combination of your flags in a real browser against an independent price contract, and shows the smallest observed failing set with screenshots, Playwright traces and a JSON report. Every run requires a human to review and approve a hash-bound plan first; original flag state is recorded and restored with read-back verification.
 
-Built for the Flagsmith Experimentation Hackathon (Toggle Wars), across three tracks. Track 1 (Test Something Real): a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure. Track 2: an agent harness that drives Flagsmith with a human approving every change. Track 3: the same tool run against open-source Flagsmith started from source.
+Built for the Flagsmith Experimentation Hackathon (Toggle Wars), across three tracks. Track 2: an agent harness that drives Flagsmith with a human approving every change, the main entry. Track 1 (Test Something Real): a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure. Track 3: the same tool run against open-source Flagsmith started from source.
+
 **Live demo:** <https://flagproof.onrender.com> runs the locked public demo. The eight-configuration matrix is fixture-only (no Flagsmith account needed); the experiment agent panel can use a guarded Flagsmith Cloud demo project with labelled synthetic visitors when that mode is enabled. The recorded experiment analysis is at <https://flagproof.onrender.com/experiment/results>.
+
+## Experiment agent panel
+
+The home page has a panel, "03 / Ask the experiment agent", for the checkout button copy experiment. You describe a change in plain words (up to 300 characters). The agent drafts a Flagsmith experiment proposal. It can change only four things: the experiment name, the hypothesis, the traffic split and the share of visitors who enter. The flag, event and variation keys are fixed.
+
+Before anything runs you see the proposal as a field-by-field comparison with the fixed template, a check of the proposal against your request, the hard-limit check, and a fingerprint. Approval is bound to that fingerprint. The request check is narrow: it machine-checks only a rollout percentage or a three-way traffic split named in your request, and a proposal that contradicts either cannot be approved. The name and hypothesis are not machine-checked against your request, so read them yourself. Nothing is created until you approve.
+
+The drafting model is configurable. The local planner uses Ollama (`FLAGPROOF_PLANNER=ollama`). The hosted demo uses an OpenAI-compatible chat endpoint (`FLAGPROOF_PLANNER=openai` with `PLANNER_API_URL`, `PLANNER_API_KEY` and `PLANNER_MODEL`); the public demo runs `openai/gpt-oss-20b` through Groq. The key stays on the server.
+
+The panel states which mode it is in:
+
+- **Fixture mode** (the default, and what the hosted demo shows unless live mode is turned on): approval is recorded as an artifact and Flagsmith is never contacted.
+- **Flagsmith mode**: approval creates the experiment in a Flagsmith project. On the Flagsmith Cloud demo project, one run at a time is allowed, and the demo has a monthly allowance of synthetic visitors. When the allowance is used up, or someone else's run is active, the panel says so and starts nothing.
+
+In Flagsmith mode, a run is a single click that does three things: it starts the experiment, sends labelled synthetic visitors (300 per run, up to 600 when half or fewer of the visitors enter), and reads Flagsmith's own analysis. Flagsmith needs time and enough exposures to produce lift and win-probability estimates. If they are not there yet, the panel says so and names no winner. You can check again once. The experiment is kept for about 6 minutes for that check and is then deleted so the next visitor can use the demo. After that, the run is closed and a new run is needed.
+
+What this does not show:
+
+- All visitors are synthetic. Conversion outcomes come from preset rates, so any lift is by construction and says nothing about real users.
+- The panel never claims a winner. When Flagsmith returns estimates they come from synthetic visitors with preset conversion rates, so they hold by construction. If the approved hypothesis names an absolute threshold (for example "at least 5 percentage points"), the result text names that same number and says it cannot be judged from relative intervals.
+- Two recorded public Cloud runs (experiments 1470 and 1480, 27 and 28 Nov 2026) were approved by a Playwright script clicking through the browser UI. A third (experiment 1610, 28 Nov 2026) was approved by a person on a screen recording. The product cannot tell a person's click from automation, and the recording shows actions, not reasoning.
+- Cloud and self-hosted numbers are never combined.
+- No time-saved claim is made, because no manual baseline was measured.
 
 ## The experiment (Track 01 entry)
 
@@ -19,7 +43,7 @@ The hypothesis, fixed and hash-approved before any traffic ran:
 - **A metric from real events.** Each visitor records an exposure through the SDK (`getExperimentFlag`) and a `checkout_completed` event at the moment of conversion (`trackEvent`), matched to a Flagsmith "Checkout completion rate" metric. Flagsmith's managed warehouse confirmed 638 events from the run: 450 exposures and 188 conversions.
 - **Results you can explain.** Flagsmith's processed Bayesian analysis is quoted below with its credible intervals, and `node scripts/read-experiment-result.mjs test/fixtures/run-report-399.json` (the record path is required; the committed fixture is a byte-identical copy of the recorded run report) re-derives the decision read offline from the recorded run: whether each credible interval clears zero, whether the hypothesis's absolute threshold is established, the preset-versus-realized comparison, and the four wiring-validity checks. Threshold support reports **unknown** unless actual absolute-effect posterior evidence is recorded: multiplying a relative credible bound by the observed baseline is illustrative arithmetic, not a calibrated absolute-lift bound, and is labelled as such. Validity checks report **unknown** where the record does not contain the evidence; a documented checklist is not treated as machine-verified proof, and zero observed conversions reads as unknown (a valid possible outcome), not as broken tracking. No network calls.
 
-On 23 Nov 2026 a single fixed 450-visitor synthetic run was executed, and Flagsmith's processed Bayesian analysis was verified on 24 Nov 2026. Control: 158 exposures at 32.3%. get_it_today: 145 at 47.6% (+47.4% delta, 95% credible interval [5.5%, 89.3%], 99% win probability). buy_now: 147 at 46.3% (+43.3%, [2.3%, 84.3%], 98%). Win probability is pairwise against control, not a ranking. Both intervals clear zero, so under Flagsmith's model both variations show a positive relative lift over control on this synthetic data; the absolute 10-point threshold in the hypothesis is not established by the reported intervals, and no direct challenger-vs-challenger comparison was established. These numbers demonstrate Flagsmith's analysis pipeline end to end on synthetic data; they say nothing about real users. The hosted demo also serves this recorded analysis at /experiment/results: a saved-results page that renders the repo's evidence record (byte-identical to the run report), labels deltas and intervals as relative, states that the absolute threshold stays unknown on this record, and never contacts Flagsmith.
+On 23 Nov 2026 a single fixed 450-visitor synthetic run was executed, and Flagsmith's processed Bayesian analysis was verified on 24 Nov 2026. Control: 158 exposures at 32.3%. get_it_today: 145 at 47.6% (+47.4% delta, 95% credible interval [5.5%, 89.3%], 99% win probability). buy_now: 147 at 46.3% (+43.3%, [2.3%, 84.3%], 98%). Win probability is pairwise against control, not a ranking. Both intervals clear zero, so under Flagsmith's model both variations show a positive relative lift over control on this synthetic data; the absolute 10-point threshold in the hypothesis is not established by the reported intervals. A separate calculation from the exposure counts (ours, not Flagsmith's; the exact per-arm counts sent, 51 of 158, 68 of 147 and 69 of 145, independent uniform Beta priors, seeded Monte Carlo, `node scripts/absolute-threshold.mjs`) puts buy_now minus control at about 13.8 percentage points, 95% credible interval 3.0 to 24.5, with about a 76% probability of at least 10 points, so the threshold is still not established. No direct challenger-vs-challenger comparison was established. These numbers demonstrate Flagsmith's analysis pipeline end to end on synthetic data; they say nothing about real users. The hosted demo also serves this recorded analysis at /experiment/results: a saved-results page that renders the repo's evidence record (byte-identical to the run report), labels deltas and intervals as relative, states that the absolute threshold stays unknown on this record, and never contacts Flagsmith.
 
 ![Flagsmith dashboard Bayesian analysis for the recorded run, verified 24 Nov 2026](evidence/experiment-399/flagsmith-analysis-2026-11-24.png)
 
@@ -97,7 +121,10 @@ Without `.env`, the app runs against a bundled local fixture adapter (clearly la
 
 You can run FlagProof against the open-source Flagsmith API on your own machine, without Docker and without a Flagsmith Cloud account. This is a local test setup with throwaway secrets, not a production deployment.
 
-Requirements: Linux x86_64, Node.js 22 or later, npm, Chromium (`npx playwright install chromium`), and git, curl, unzip, xz, [uv](https://docs.astral.sh/uv/) and the `psql` client. uv downloads Python 3.12 for Flagsmith by itself. Run every command from the root of this repository.
+Requirements: Linux x86_64 (the only system this has been checked on; on any other system the script stops at its first step and says so), Node.js 22 or later, npm, Chromium (`npx playwright install chromium`), and git, curl, unzip, xz and [uv](https://docs.astral.sh/uv/). uv downloads Python 3.12 for Flagsmith by itself. No `psql` client is needed. To check the machine first, run `selfhosted/from-source.sh check`. Run every command from the root of this repository.
+
+<details>
+<summary>Setup steps and what was checked</summary>
 
 Terminal 1. Set up once (about 80 seconds), then start Flagsmith. `serve` keeps running, so leave this terminal open:
 
@@ -117,30 +144,9 @@ npm start
 
 The dashboard shows **SELF-HOSTED FLAGSMITH API + SDK**. To run the checks without the dashboard, use `node scripts/verify-selfhosted.mjs .env` (configuration matrix) and `node scripts/verify-selfhosted-experiment.mjs .env` (experiment with synthetic visitors). For the optional local planner, start Ollama, pull a model, and set `FLAGPROOF_PLANNER=ollama OLLAMA_MODEL=<model>` before the experiment script. Optionally set `FLAGPROOF_REQUEST="<up to 300 characters>"` to pass a plain-language request.
 
-Checked on 27 Nov 2026 from an empty directory: the matrix ran 8 configurations plus one reproduction run, 9 cases in all: 6 passed and 3 failed (the seeded defect), with flags restored and read back. The experiment was created and started, synthetic visitors were sent, and Flagsmith's own analysis returned. Numbers from a self-hosted run differ from the Cloud run and are never combined with it. `docker-compose.selfhosted.yml` is written but has not been run.
+Checked on 27 Nov 2026 from an empty directory: the matrix ran 8 configurations plus one reproduction run, 9 cases in all: 6 passed and 3 failed (the seeded defect), with flags restored and read back. The experiment was created and started, synthetic visitors were sent, and Flagsmith's own analysis returned. Numbers from a self-hosted run differ from the Cloud run and are never combined with it. `docker-compose.selfhosted.yml` is written but has not been run. Re-checked on 28 Nov 2026 from an empty directory after the setup script change (`check` step, no `psql` client installed): the same matrix gave 9 cases, 6 passed and 3 failed, with flags restored and read back.
 
-## Experiment agent panel
-
-The home page has a panel, "03 / Ask the experiment agent", for the checkout button copy experiment. You describe a change in plain words (up to 300 characters). The agent drafts a Flagsmith experiment proposal. It can change only four things: the experiment name, the hypothesis, the traffic split and the share of visitors who enter. The flag, event and variation keys are fixed.
-
-Before anything runs you see the proposal as a field-by-field comparison with the fixed template, a check of the proposal against your request, the hard-limit check, and a fingerprint. Approval is bound to that fingerprint. The request check is narrow: it machine-checks only a rollout percentage or a three-way traffic split named in your request, and a proposal that contradicts either cannot be approved. The name and hypothesis are not machine-checked against your request, so read them yourself. Nothing is created until you approve.
-
-The drafting model is configurable. The local planner uses Ollama (`FLAGPROOF_PLANNER=ollama`). The hosted demo uses an OpenAI-compatible chat endpoint (`FLAGPROOF_PLANNER=openai` with `PLANNER_API_URL`, `PLANNER_API_KEY` and `PLANNER_MODEL`); the public demo runs `openai/gpt-oss-20b` through Groq. The key stays on the server.
-
-The panel states which mode it is in:
-
-- **Fixture mode** (the default, and what the hosted demo shows unless live mode is turned on): approval is recorded as an artifact and Flagsmith is never contacted.
-- **Flagsmith mode**: approval creates the experiment in a Flagsmith project. On the Flagsmith Cloud demo project, one run at a time is allowed, and the demo has a monthly allowance of synthetic visitors. When the allowance is used up, or someone else's run is active, the panel says so and starts nothing.
-
-In Flagsmith mode, a run is a single click that does three things: it starts the experiment, sends labelled synthetic visitors (300 per run, up to 600 when half or fewer of the visitors enter), and reads Flagsmith's own analysis. Flagsmith needs time and enough exposures to produce lift and win-probability estimates. If they are not there yet, the panel says so and names no winner. You can check again once. The experiment is kept for about 6 minutes for that check and is then deleted so the next visitor can use the demo. After that, the run is closed and a new run is needed.
-
-What this does not show:
-
-- All visitors are synthetic. Conversion outcomes come from preset rates, so any lift is by construction and says nothing about real users.
-- The panel never claims a winner. When Flagsmith returns estimates they come from synthetic visitors with preset conversion rates, so they hold by construction. If the approved hypothesis names an absolute threshold (for example "at least 5 percentage points"), the result text names that same number and says it cannot be judged from relative intervals.
-- Two recorded public Cloud runs (experiments 1470 and 1480, 27 and 28 Nov 2026) were approved by a Playwright script clicking through the browser UI. A third (experiment 1610, 28 Nov 2026) was approved by a person on a screen recording. The product cannot tell a person's click from automation, and the recording shows actions, not reasoning.
-- Cloud and self-hosted numbers are never combined.
-- No time-saved claim is made, because no manual baseline was measured.
+</details>
 
 ## What is working, and what is not
 
@@ -160,7 +166,7 @@ What this does not show:
 | Offline experiment result reader (interval read, threshold support bounded to recorded posterior evidence, preset-vs-realized, evidence-bounded validity checks) | Working and tested against the recorded experiment-399 run and synthetic fixtures |
 | Agent experiment proposal with hash-gated human approval and fixture execution | Working and tested |
 | Live experiment creation adapter (management REST; create-only unless separately confirmed) | Tested against stubbed API responses, and exercised once against a real organisation 24 Nov 2026 (temporary flag and stopped experiment created, read back, cleaned up; read-back correction validated offline, one live retest pending) |
-| Self-hosted Flagsmith compose file | Written, not runtime-verified at any level (boot, integration and experiment checks all outstanding) |
+| Self-hosted Flagsmith compose file (Flagsmith and PostgreSQL only; FlagProof runs on the host) | Written, not run: no Docker daemon was available to test it. The image tags exist in their registries. Treat it as untested |
 | Responsive dashboard at 320, 390, 1280 and 1440 px | Checked in Chromium |
 | Optional local-model planner (plan and experiment proposal) | Recorded runs with qwen2.5:0.5b on 20 Nov 2026, and runs on 27 Nov 2026 with qwen2.5:0.5b and qwen2.5:1.5b. Output is schema-checked with hard limits: variation keys fixed, traffic split adds to 100, rollout at least 1, no URLs or commands in text. A valid proposal, including one identical to the template, goes to review and runs only after its exact hash is approved. An invalid proposal is rejected with "Nothing will run". There is no silent fallback. Small models often return the template unchanged or an invalid shape. |
 | Optional plain-language request to the planner (up to 300 characters) | Working, with limits. The request is passed to the model as data. On 27 Nov 2026 qwen2.5:1.5b answered "only expose half" with a 50% rollout (a reviewable proposal with its hash). qwen2.5:0.5b ignored requests or returned invalid output. Covered by mocked unit tests. |
@@ -170,6 +176,12 @@ What this does not show:
 | Production app targeting and CI | **Not implemented** |
 
 The verified Flagsmith run covered the selected disposable environment only: plain boolean flags, no overrides, one writer. It is not proof of safety for arbitrary accounts, other flag types, concurrent writers or production use.
+
+## Scope and scaling
+
+The matrix tries every on/off combination, so n flags need 2^n cases: 8 for the three flags in this demo, 1,024 for ten. The shipped plan is fixed at three flags and eight cases. Larger flag sets would need sampling or pairwise coverage, which this project does not implement. A green result covers only the journeys and combinations that were run.
+
+The human approval in run 1610 is a recorded proposal hash plus an approval click captured on screen recording. The product cannot tell a person's click from a script's click, so runs 1470 and 1480, which were scripted, are labelled as such.
 
 ## Safety boundary
 
@@ -191,7 +203,3 @@ npm test
 ```
 
 200 automated tests cover matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup, the Flagsmith adapter and SDK bundle against simulated responses, the guided setup checks (flag discovery, override/variant/malformed rejection, key routing, `.env` handling and secret-leakage guards), the AI planner against mocked model responses: valid-plan acceptance, schema-violation rejection, scenario-change rejection, explicit API failure with no silent fallback, and the manual path never calling the model, the experiment helpers (deterministic identity hashing and fixture conversion), the traffic CLI end to end against a local stub of the Flagsmith APIs including the A/A options, and the agent proposal flow (schema validation, review, hash-gating and the live adapter's request sequence), and the experiment result reader (interval reading, hypothesis-threshold support, preset-versus-realized comparison and evidence-bounded validity checks that report unknown where the record is insufficient), and the saved-results page (record rendering, relative-labelled headers, unknown-status threshold wording and the recorded detail panel).
-
-## Provenance
-
-Built 17-18 November 2026, before the hackathon window, as a pre-event prototype; the Flagsmith integration was verified against a disposable demo environment during those dates. Event eligibility is the organizers' call and is not claimed here. Git history is intact and unrewritten. Experiment, agent-proposal and self-hosting additions were built 23-24 November 2026.

@@ -1,14 +1,15 @@
 # Self-hosted Flagsmith for FlagProof (Track 03 path)
 #
-# Starts a full self-hosted Flagsmith (dashboard + REST API + PostgreSQL) next
-# to FlagProof. FlagProof then talks only to http://localhost:8000.
+# Starts a self-hosted Flagsmith (dashboard + REST API + PostgreSQL). Run
+# FlagProof itself on the host; it then talks only to http://localhost:8000.
+# NOT RUN: written without a Docker daemon available, so it is untested.
 #
 # Usage:
 #   docker compose -f docker-compose.selfhosted.yml up -d
 #   open http://localhost:8000, create the admin account and organisation
 #   create a project + environment, copy its client-side environment key
 #   FLAGSMITH_API_URL=http://localhost:8000/api/v1/ npm run setup:flagsmith
-#   FLAGPROOF_MODE=flagsmith npm start
+#   npm start
 #
 # Experimentation on self-hosted: Environment Settings > Warehouse, choose
 # "Flagsmith database". SDK events then go to http://localhost:8000/api/v1/events/.
@@ -40,19 +41,5 @@ services:
       retries: 20
     volumes:
       - flagsmith-pgdata:/var/lib/postgresql/data
-  flagproof:
-    build: .
-    ports:
-      - "4317:4317"
-    environment:
-      FLAGPROOF_MODE: flagsmith
-      # Inside the compose network the Flagsmith service is reached by its
-      # service name, not localhost.
-      FLAGSMITH_API_URL: http://flagsmith:8000/api/v1/
-      FLAGSMITH_EVENTS_API_URL: http://flagsmith:8000/api/
-    depends_on:
-      - flagsmith
-    profiles:
-      - flagproof
 volumes:
   flagsmith-pgdata:
