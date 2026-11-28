@@ -31,10 +31,16 @@ jobs:
         run: node scripts/bootstrap-selfhosted.mjs "$RUNNER_TEMP/ci.env"
       - name: Matrix with restore and read-back
         run: node scripts/verify-selfhosted.mjs "$RUNNER_TEMP/ci.env" "$RUNNER_TEMP/selfhosted-report.json"
-      - name: Report summary
+      - name: Flagsmith container logs
+        if: failure()
+        run: docker compose -f docker-compose.selfhosted.yml logs --tail 300 flagsmith
+      - name: Keep the report
         if: always()
-        run: |
-          test -f "$RUNNER_TEMP/selfhosted-report.json" && node -e "const r=require(process.env.RUNNER_TEMP+'/selfhosted-report.json');console.log(JSON.stringify(r.summary??Object.keys(r)))" || true
+        uses: actions/upload-artifact@v4
+        with:
+          name: selfhosted-report
+          path: ${{ runner.temp }}/selfhosted-report.json
+          if-no-files-found: ignore
       - name: Tear down
         if: always()
         run: |
