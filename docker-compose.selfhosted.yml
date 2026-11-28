@@ -2,7 +2,8 @@
 #
 # Starts a self-hosted Flagsmith (dashboard + REST API + PostgreSQL). Run
 # FlagProof itself on the host; it then talks only to http://localhost:8000.
-# NOT RUN: written without a Docker daemon available, so it is untested.
+# Run once on 28 Nov 2026 on a GitHub-hosted Linux runner (the selfhosted-docker workflow):
+# full matrix passed. One run, Linux only; macOS and Docker Desktop are untested.
 #
 # Usage:
 #   docker compose -f docker-compose.selfhosted.yml up -d

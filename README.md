@@ -123,6 +123,8 @@ You can run FlagProof against the open-source Flagsmith API on your own machine,
 
 Requirements: Linux x86_64 (the only system this has been checked on; on any other system the script stops at its first step and says so), Node.js 22 or later, npm, Chromium (`npx playwright install chromium`), and git, curl, unzip, xz and [uv](https://docs.astral.sh/uv/). uv downloads Python 3.12 for Flagsmith by itself. No `psql` client is needed. To check the machine first, run `selfhosted/from-source.sh check`. Run every command from the root of this repository.
 
+Docker route: `docker-compose.selfhosted.yml` starts Flagsmith and PostgreSQL only; FlagProof runs on the host. On 28 Nov 2026 the manual workflow `.github/workflows/selfhosted-docker.yml` ran it once on a GitHub-hosted Linux runner ([run](https://github.com/Aviral02git/FlagProof/actions/runs/46131200961)): 9 cases, 6 passed and 3 failed as planted, with flags restored and read back. That is one run on Linux. macOS and Docker Desktop have not been tested.
+
 <details>
 <summary>Setup steps and what was checked</summary>
 
@@ -166,7 +168,7 @@ Checked on 27 Nov 2026 from an empty directory: the matrix ran 8 configurations 
 | Offline experiment result reader (interval read, threshold support bounded to recorded posterior evidence, preset-vs-realized, evidence-bounded validity checks) | Working and tested against the recorded experiment-399 run and synthetic fixtures |
 | Agent experiment proposal with hash-gated human approval and fixture execution | Working and tested |
 | Live experiment creation adapter (management REST; create-only unless separately confirmed) | Tested against stubbed API responses, and exercised once against a real organisation 24 Nov 2026 (temporary flag and stopped experiment created, read back, cleaned up; read-back correction validated offline, one live retest pending) |
-| Self-hosted Flagsmith compose file (Flagsmith and PostgreSQL only; FlagProof runs on the host) | Written, not run: no Docker daemon was available to test it. The image tags exist in their registries. Treat it as untested |
+| Self-hosted Flagsmith compose file (Flagsmith and PostgreSQL only; FlagProof runs on the host) | Run once on 28 Nov 2026 on a GitHub-hosted Linux runner with the manual workflow: 9 cases, 6 passed and 3 failed as planted, flags restored and read back ([run](https://github.com/Aviral02git/FlagProof/actions/runs/46131200961)). One run, Linux only; macOS and Docker Desktop are untested |
 | Responsive dashboard at 320, 390, 1280 and 1440 px | Checked in Chromium |
 | Optional local-model planner (plan and experiment proposal) | Recorded runs with qwen2.5:0.5b on 20 Nov 2026, and runs on 27 Nov 2026 with qwen2.5:0.5b and qwen2.5:1.5b. Output is schema-checked with hard limits: variation keys fixed, traffic split adds to 100, rollout at least 1, no URLs or commands in text. A valid proposal, including one identical to the template, goes to review and runs only after its exact hash is approved. An invalid proposal is rejected with "Nothing will run". There is no silent fallback. Small models often return the template unchanged or an invalid shape. |
 | Optional plain-language request to the planner (up to 300 characters) | Working, with limits. The request is passed to the model as data. On 27 Nov 2026 qwen2.5:1.5b answered "only expose half" with a 50% rollout (a reviewable proposal with its hash). qwen2.5:0.5b ignored requests or returned invalid output. Covered by mocked unit tests. |
