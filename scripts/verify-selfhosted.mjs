@@ -9,6 +9,7 @@ import {startServer} from '../src/server.mjs';
 import {FlagsmithAdapter} from '../src/flags.mjs';
 import {verifyFlagsmithEnvironment} from '../src/flagsmith-check.mjs';
 import {flagsmithHosts} from '../src/hosts.mjs';
+import {judgeRun} from './selfhosted-expect.mjs';
 const envFile=process.argv[2]||'.env',outFile=process.argv[3]||'selfhosted-report.json';
 for(const line of (await readFile(envFile,'utf8')).split(/\r?\n/)){const m=line.match(/^([A-Z0-9_]+)=(.*)$/);if(m&&process.env[m[1]]===undefined)process.env[m[1]]=m[2];}
 const hosts=flagsmithHosts();
@@ -31,5 +32,9 @@ try{
  const full=await (await fetch(app.origin+`/api/runs/${run.id}`)).json();
  const summary={mode:full.mode,integration:full.integration,status:full.status,cleanup:full.cleanup,pass:(full.results||[]).filter(r=>r.status==='pass').length,fail:(full.results||[]).filter(r=>r.status==='fail').length,total:(full.results||[]).length,startedAt:full.startedAt,finishedAt:full.finishedAt,flagsmithHost:hosts.origin};
  console.log('level 2 result',JSON.stringify(summary));
- await writeFile(outFile,JSON.stringify({summary,originalFlags:full.originalFlags,results:full.results},null,1));
+ await writeFile(outFile,JSON.stringify({summary,error:full.error,reproduction:full.reproduction,originalFlags:full.originalFlags,results:full.results},null,1));
+ for(const r of full.results||[])console.log(`case ${r.label} ${JSON.stringify(r.flags)} setup=${r.setup} status=${r.status}${r.errors?.length?' error='+String(r.errors[0]).slice(0,300):''}`);
+ if(full.error)console.log('run error:',full.error);
+ const verdict=judgeRun(summary,full.reproduction);
+ if(!verdict.ok){console.error('FAILED:',verdict.problems.join('; '));process.exitCode=1;}else console.log('OK: run completed, 6 pass and 3 fail as planted, flags restored and read back');
 }finally{await app.close();}

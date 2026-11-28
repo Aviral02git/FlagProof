@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
       DISABLE_INFLUXDB_FEATURES: "true"
+      # Run background tasks inside the request, as the from-source setup does.
+      TASK_RUN_METHOD: SYNCHRONOUSLY
     depends_on:
       postgres:
         condition: service_healthy
