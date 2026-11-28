@@ -4,7 +4,7 @@
 
 A flag can pass every individual test and still break a checkout when combined with another flag. FlagProof connects to a real Flagsmith environment through the management API and browser SDK, exercises every on/off combination of your flags in a real browser against an independent price contract, and shows the smallest observed failing set with screenshots, Playwright traces and a JSON report. Every run requires a human to review and approve a hash-bound plan first; original flag state is recorded and restored with read-back verification.
 
-Built for the Flagsmith Experimentation Hackathon (Toggle Wars), targeting the "Test Something Real" track: a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure, plus an agent harness that drives Flagsmith with a human approving every change. 
+Built for the Flagsmith Experimentation Hackathon (Toggle Wars), across three tracks. Track 1 (Test Something Real): a full experiment designed, executed and read with statistical discipline on real Flagsmith infrastructure. Track 2: an agent harness that drives Flagsmith with a human approving every change. Track 3: the same tool run against open-source Flagsmith started from source.
 **Live demo:** <https://flagproof.onrender.com> runs the locked public demo. The eight-configuration matrix is fixture-only (no Flagsmith account needed); the experiment agent panel can use a guarded Flagsmith Cloud demo project with labelled synthetic visitors when that mode is enabled. The recorded experiment analysis is at <https://flagproof.onrender.com/experiment/results>.
 
 ## The experiment (Track 01 entry)
@@ -125,6 +125,8 @@ The home page has a panel, "03 / Ask the experiment agent", for the checkout but
 
 Before anything runs you see the proposal as a field-by-field comparison with the fixed template, a check of the proposal against your request, the hard-limit check, and a fingerprint. Approval is bound to that fingerprint. The request check is narrow: it machine-checks only a rollout percentage or a three-way traffic split named in your request, and a proposal that contradicts either cannot be approved. The name and hypothesis are not machine-checked against your request, so read them yourself. Nothing is created until you approve.
 
+The drafting model is configurable. The local planner uses Ollama (`FLAGPROOF_PLANNER=ollama`). The hosted demo uses an OpenAI-compatible chat endpoint (`FLAGPROOF_PLANNER=openai` with `PLANNER_API_URL`, `PLANNER_API_KEY` and `PLANNER_MODEL`); the public demo runs `openai/gpt-oss-20b` through Groq. The key stays on the server.
+
 The panel states which mode it is in:
 
 - **Fixture mode** (the default, and what the hosted demo shows unless live mode is turned on): approval is recorded as an artifact and Flagsmith is never contacted.
@@ -135,8 +137,8 @@ In Flagsmith mode, a run is a single click that does three things: it starts the
 What this does not show:
 
 - All visitors are synthetic. Conversion outcomes come from preset rates, so any lift is by construction and says nothing about real users.
-- The panel never claims a winner. When Flagsmith returns estimates they come from synthetic visitors with preset conversion rates, so they hold by construction, and the 10-point absolute threshold in the hypothesis is not judged from relative intervals.
-- The approving click in recorded runs was made through the browser UI by a Playwright script. The product cannot tell a person's click from automation.
+- The panel never claims a winner. When Flagsmith returns estimates they come from synthetic visitors with preset conversion rates, so they hold by construction. If the approved hypothesis names an absolute threshold (for example "at least 5 percentage points"), the result text names that same number and says it cannot be judged from relative intervals.
+- Two recorded public Cloud runs (experiments 1470 and 1480, 27 and 28 Nov 2026) were approved by a Playwright script clicking through the browser UI. A third (experiment 1610, 28 Nov 2026) was approved by a person on a screen recording. The product cannot tell a person's click from automation, and the recording shows actions, not reasoning.
 - Cloud and self-hosted numbers are never combined.
 - No time-saved claim is made, because no manual baseline was measured.
 
@@ -188,7 +190,7 @@ The verified Flagsmith run covered the selected disposable environment only: pla
 npm test
 ```
 
-One hundred and five automated tests cover matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup, the Flagsmith adapter and SDK bundle against simulated responses, the guided setup checks (flag discovery, override/variant/malformed rejection, key routing, `.env` handling and secret-leakage guards), the AI planner against mocked model responses: valid-plan acceptance, schema-violation rejection, scenario-change rejection, explicit API failure with no silent fallback, and the manual path never calling the model, the experiment helpers (deterministic identity hashing and fixture conversion), the traffic CLI end to end against a local stub of the Flagsmith APIs including the A/A options, and the agent proposal flow (schema validation, review, hash-gating and the live adapter's request sequence), and the experiment result reader (interval reading, hypothesis-threshold support, preset-versus-realized comparison and evidence-bounded validity checks that report unknown where the record is insufficient), and the saved-results page (record rendering, relative-labelled headers, unknown-status threshold wording and the recorded detail panel).
+200 automated tests cover matrix/schema logic, subset evidence rules, API review guards, CSRF/origin checks, concurrent approvals, actual seeded/healthy browser runs, non-default-state restoration, cancellation, invalid setup and failed cleanup, the Flagsmith adapter and SDK bundle against simulated responses, the guided setup checks (flag discovery, override/variant/malformed rejection, key routing, `.env` handling and secret-leakage guards), the AI planner against mocked model responses: valid-plan acceptance, schema-violation rejection, scenario-change rejection, explicit API failure with no silent fallback, and the manual path never calling the model, the experiment helpers (deterministic identity hashing and fixture conversion), the traffic CLI end to end against a local stub of the Flagsmith APIs including the A/A options, and the agent proposal flow (schema validation, review, hash-gating and the live adapter's request sequence), and the experiment result reader (interval reading, hypothesis-threshold support, preset-versus-realized comparison and evidence-bounded validity checks that report unknown where the record is insufficient), and the saved-results page (record rendering, relative-labelled headers, unknown-status threshold wording and the recorded detail panel).
 
 ## Provenance
 
